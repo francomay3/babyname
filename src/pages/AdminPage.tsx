@@ -102,7 +102,7 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
                 <Card key={u.uid} shadow="xs" radius="md" withBorder py="xs" px="sm">
                   <Group justify="space-between" wrap="nowrap">
                     <Group gap="sm" wrap="nowrap">
-                      <Avatar src={u.photoURL || null} size="sm" radius="xl">
+                      <Avatar src={u.photoURL || undefined} size="sm" radius="xl">
                         {u.displayName?.[0]}
                       </Avatar>
                       <div>
@@ -119,7 +119,7 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
                         variant="light"
                         color="blue"
                         size="sm"
-                        title="Ver perfil"
+                        title={t.adminViewProfile}
                         onClick={() => onNavigateToUser(u.uid)}
                       >
                         <IconExternalLink size={14} />
@@ -167,7 +167,7 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
                 return (
                   <Group key={uid} justify="space-between" wrap="nowrap">
                     <Group gap="xs" wrap="nowrap">
-                      <Avatar src={info?.photoURL || null} size="xs" radius="xl">
+                      <Avatar src={info?.photoURL || undefined} size="xs" radius="xl">
                         {info?.displayName?.[0]}
                       </Avatar>
                       <Text size="sm">{info?.displayName ?? uid}</Text>

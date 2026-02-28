@@ -55,7 +55,7 @@ function ModalContent({ name, onNavigateToUser }: { name: BabyName; onNavigateTo
         style={{ cursor: proposer && onNavigateToUser ? 'pointer' : 'default' }}
       >
         <Group gap="sm" align="center">
-          <Avatar src={proposer?.photoURL || null} size="sm" radius="xl">
+          <Avatar src={proposer?.photoURL || undefined} size="sm" radius="xl">
             {proposer?.displayName?.[0]}
           </Avatar>
           <Text fz="sm" c="dimmed">

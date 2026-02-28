@@ -49,6 +49,7 @@ export function UserProfilePage({
   const [confirmDeleteVotes, setConfirmDeleteVotes] = useState(false);
   const [confirmDeleteName, setConfirmDeleteName] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState<BabyName | null>(null);
+  const [showAllVotes, setShowAllVotes] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const isOwnProfile = user?.uid === userId;
@@ -127,7 +128,7 @@ export function UserProfilePage({
         <ActionIcon variant="subtle" color="gray" size="lg" onClick={onBack} aria-label={t.profileBack}>
           <IconArrowLeft size={20} />
         </ActionIcon>
-        <Avatar src={userInfo?.photoURL || null} size="lg" radius="xl">
+        <Avatar src={userInfo?.photoURL || undefined} size="lg" radius="xl">
           {userInfo?.displayName?.[0]}
         </Avatar>
         <div>
@@ -150,7 +151,7 @@ export function UserProfilePage({
               { label: `👦 ${t.malePluralLabel}`, value: 'male' },
             ]}
             size="xs"
-            color="pink"
+            color={genderView === 'female' ? 'pink' : 'blue'}
             radius="xl"
           />
         </Group>
@@ -168,17 +169,19 @@ export function UserProfilePage({
           <Stack gap={6}>
             {optimisticNames.map((name) => (
               <Group key={name.id} justify="space-between" wrap="nowrap">
-                <Group gap="xs" wrap="nowrap">
-                  <Badge
-                    variant="light"
-                    color={name.gender === 'female' ? 'pink' : 'blue'}
-                    radius="xl"
-                    size="sm"
-                  >
-                    {name.gender === 'female' ? t.femaleLabel : t.maleLabel}
-                  </Badge>
-                  <Text fz="sm">{capitalizeName(name.text)}</Text>
-                </Group>
+                <UnstyledButton onClick={() => setSelectedName(name)} style={{ flex: 1, minWidth: 0 }}>
+                  <Group gap="xs" wrap="nowrap">
+                    <Badge
+                      variant="light"
+                      color={name.gender === 'female' ? 'pink' : 'blue'}
+                      radius="xl"
+                      size="sm"
+                    >
+                      {name.gender === 'female' ? t.femaleLabel : t.maleLabel}
+                    </Badge>
+                    <Text fz="sm">{capitalizeName(name.text)}</Text>
+                  </Group>
+                </UnstyledButton>
                 {canDeleteNames && (
                   <ActionIcon
                     variant="subtle"
@@ -218,7 +221,7 @@ export function UserProfilePage({
           </Center>
         ) : (
           <Stack gap={4}>
-            {optimisticMatches.slice(0, 10).map((match) => {
+            {(showAllVotes ? optimisticMatches : optimisticMatches.slice(0, 10)).map((match) => {
               const winner = allNames.find((n) => n.id === match.winnerId);
               const loser = allNames.find((n) => n.id === match.loserId);
               return (
@@ -247,9 +250,14 @@ export function UserProfilePage({
               );
             })}
             {totalDuels > 10 && (
-              <Text fz="xs" c="dimmed">
-                ... y {totalDuels - 10} duelos más
-              </Text>
+              <Button
+                variant="subtle"
+                color="gray"
+                size="compact-xs"
+                onClick={() => setShowAllVotes((v) => !v)}
+              >
+                {showAllVotes ? t.profileVotesShowLess : t.profileVotesMore(totalDuels - 10)}
+              </Button>
             )}
           </Stack>
         )}

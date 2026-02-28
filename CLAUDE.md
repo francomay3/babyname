@@ -145,7 +145,7 @@ canDeleteMatch  = isAdmin  (individual match row in vote history)
 All user-facing strings live in **`src/locales.ts`** — edit there to update copy in ES/EN.
 - `LocaleContext` provides `{ t, locale, toggleLocale }` via React Context.
 - Every component uses `const { t } = useLocale()` — do NOT hardcode strings in components.
-- Exception: `"... y X duelos más"` in vote history and `title="Ver perfil"` in AdminPage are hardcoded in Spanish.
+- All user-facing strings are in `locales.ts`; no known hardcoded strings remain.
 - Language stored in `localStorage` key `babyname-locale` (default: `'es'`).
 - To add a string: add the key+type to the `Strings` interface, then add the value in both `es` and `en` locales.
 - Desktop and mobile can use separate keys (e.g. `langToggleLabel` vs `langToggleLabelMobile`).
@@ -199,7 +199,7 @@ Always wrap stored name text with `capitalizeName(text)` from `src/lib/utils.ts`
 ### Cascade deletes
 - **Delete a name**: batch-delete all `userScores` where `nameId == id` AND all `matches` where `winnerId == id` OR `loserId == id` (two separate queries for the OR), then delete the name doc.
 - **Delete all user votes** (`resetVotes`): batch-delete all `matches` + `userScores` where `userId == targetUserId`.
-- **Delete a single vote** (`deleteMatch`): delete the match doc + `increment(-1)` wins/matches on winner's score and losses/matches on loser's score. ELO is NOT recalculated.
+- **Delete a single vote** (`deleteMatch`): delete the match doc, then call `recalculateUserElo(userId)` which replays all remaining matches for that user from scratch and rewrites their `userScores`.
 - All batch ops chunk in groups of 500 to stay within Firestore limits.
 
 ### Conditional hook pattern
@@ -219,6 +219,54 @@ function ModalContent({ name }) {
 
 ### Stale-closure avoidance with refs
 In `VotePage`, `namesRef`, `scoresRef`, and `votedPairsRef` mirror their corresponding state so that `computeNextPair()` can always read the latest values synchronously without being recreated on every render. `namesRef.current = names` is assigned unconditionally on every render (not inside an effect).
+
+## Pain Points & Known Rough Edges
+
+### Firestore field name mismatch on matches
+Matches are written to Firestore with a field named `timestamp` (via `serverTimestamp()`), but the `Match` TypeScript interface calls it `createdAt: Date`. The conversion (`d.data().createdAt?.toDate()`) works only because Firestore ignores the TypeScript name, but the stored field name and the type name are inconsistent.
+
+### Race condition in ELO voting
+`useVote` reads current ELO scores, computes new ratings client-side, and writes them back with `setDoc`. If two votes on the same name happen concurrently (e.g. two users voting at the same moment), the second write overwrites the first because both reads see the same stale score. No Firestore transaction is used.
+
+### Admin bootstrap race condition
+If the `/config/admins` document is missing and the seed admin opens the app in two tabs simultaneously, both tabs detect the missing doc and both fire `setDoc`. `setIsAdmin(true)` is set optimistically before the write completes, so if one write fails the UI may claim admin status incorrectly.
+
+### O(n²) pair enumeration in VotePage
+`pickPair()` enumerates all possible pairs with a nested loop (O(n²)), filters out voted pairs, then does a weighted random draw. With many names this blocks the main thread. Additionally, VotePage opens its own `onSnapshot(collection(db, 'names'))` independently of any `useNames` hook already active in the same session — duplicate subscriptions to the same collection.
+
+### Combined ranking recomputed on every change
+`buildRanking()` in `useRanking` iterates O(names × scores × users) on every call and every data change. No memoisation by name or score. With 5 users and 100 names this is thousands of operations per render cycle.
+
+### All data loaded into memory, no pagination
+- All names are loaded client-side (for VotePage, ranking, name lists).
+- All `userScores` for a user are loaded into VotePage.
+- All matches for a user are loaded into `useUserProfile` (even though only 10 are shown).
+- All users are streamed in `AuthContext` indefinitely.
+
+### Deleted name shows '?' in vote history
+Match documents store only `winnerId`/`loserId` (IDs). When a name is deleted its ID is gone, so the vote history shows `✅ ? vs ❌ ?`. No name snapshot is stored in the match document.
+
+### Client-side duplicate name check has a race condition
+`AddNamesPage` checks for duplicates against the locally cached `femaleNames`/`maleNames` before writing. If two users add the same name simultaneously, both pass the local check and both writes succeed, creating duplicates in Firestore.
+
+### Type-unsafe Firestore reads throughout
+All Firestore documents are read with `doc.data() as Omit<Type, 'id'>`, which bypasses TypeScript. Schema drift between Firestore and TypeScript types produces no compile-time error.
+
+### Silent catch blocks
+Most `catch` blocks in the app swallow the original error object and show only a generic toast (`t.adminErrorMsg`). The actual Firestore or network error is discarded with no console logging, making debugging difficult.
+
+### Unused returned values
+- `useUserProfile` returns a `scores` array that is not destructured in `UserProfilePage.tsx`.
+- `useVote` exposes a `loading` boolean that is never consumed by `VotePage`.
+
+### Dual-state tab pattern complexity
+`App.tsx` maintains two sources of truth for the active tab: `tab` (from `useLocalStorage`, async) and `displayTab` (from `useState`, initialised by directly reading `localStorage`). This workaround is necessary because Mantine's `useLocalStorage` applies its value in a `useEffect` (after first render), but it creates two places to update and a subtle window where the two values diverge beyond the intended animation gap.
+
+### Hardcoded admin UID in source
+`SEED_ADMIN_UID` in `useAdmin.ts` is a plain string literal committed to the repo. Anyone who reads the source code knows which UID triggers the bootstrap and could exploit it if the `/config/admins` doc is ever deleted.
+
+### UserScore updates not restricted by Firestore rules
+The Firestore rule for `/userScores` allows `update` as long as `request.resource.data.userId == request.auth.uid`. This means a user can directly patch their own `eloScore`, `wins`, and `losses` via the Firestore SDK, bypassing the app's ELO logic entirely.
 
 ## Firebase Project
 

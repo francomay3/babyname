@@ -15,7 +15,7 @@ export function UsersPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
           <Paper shadow="xs" radius="md" withBorder py="xs" px="sm">
             <Group justify="space-between" wrap="nowrap">
               <Group gap="sm" wrap="nowrap">
-                <Avatar src={u.photoURL || null} size="md" radius="xl">
+                <Avatar src={u.photoURL || undefined} size="md" radius="xl">
                   {u.displayName?.[0]}
                 </Avatar>
                 <Text fw={500}>

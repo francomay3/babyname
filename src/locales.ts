@@ -33,6 +33,18 @@ export interface Strings {
   // ── Login page ───────────────────────────────────────────────────────────────
   loginSubtitle: string;
   loginButton: string;
+  loginOrDivider: string;
+  loginEmailPlaceholder: string;
+  loginPasswordPlaceholder: string;
+  loginNamePlaceholder: string;
+  loginSignInButton: string;
+  loginCreateAccountButton: string;
+  loginRegisterLink: string;
+  loginSignInLink: string;
+  loginErrorInvalidCredential: string;
+  loginErrorEmailInUse: string;
+  loginErrorWeakPassword: string;
+  loginErrorGeneric: string;
 
   // ── Add-names page ───────────────────────────────────────────────────────────
   addTitle: string;
@@ -90,6 +102,8 @@ export interface Strings {
   profileNoNames: string;
   profileNoVotes: string;
   profileDeleteName: string;
+  profileVotesMore: (n: number) => string;
+  profileVotesShowLess: string;
 
   // ── Info modal ───────────────────────────────────────────────────────────────
   infoTitle: string;
@@ -100,6 +114,7 @@ export interface Strings {
   infoDueDate: string;
 
   // ── Admin panel ──────────────────────────────────────────────────────────────
+  adminViewProfile: string;
   adminDrawerTitle: string;
   adminSectionUsers: string;
   adminSectionAdmins: string;
@@ -143,6 +158,18 @@ export const locales: Record<Locale, Strings> = {
     loginSubtitle:
       'Elegí el nombre perfecto para tu bebé jugando a duelos entre nombres. ¡El ganador se gana el corazón de la familia!',
     loginButton: 'Entrar con Google',
+    loginOrDivider: 'o',
+    loginEmailPlaceholder: 'Email',
+    loginPasswordPlaceholder: 'Contraseña',
+    loginNamePlaceholder: 'Tu nombre',
+    loginSignInButton: 'Entrar',
+    loginCreateAccountButton: 'Crear cuenta',
+    loginRegisterLink: '¿No tenés cuenta? Registrate',
+    loginSignInLink: '¿Ya tenés cuenta? Ingresá',
+    loginErrorInvalidCredential: 'Email o contraseña incorrectos.',
+    loginErrorEmailInUse: 'Ese email ya está registrado.',
+    loginErrorWeakPassword: 'La contraseña debe tener al menos 6 caracteres.',
+    loginErrorGeneric: 'No se pudo iniciar sesión. Intentá de nuevo.',
 
     addTitle: '✨ Sugerí un nombre',
     addPlaceholder: 'Escribí un nombre...',
@@ -182,10 +209,12 @@ export const locales: Record<Locale, Strings> = {
     profileNoNames: 'Todavía no sugirió ningún nombre.',
     profileNoVotes: 'Todavía no votó ningún duelo.',
     profileDeleteName: 'Borrar nombre',
+    profileVotesMore: (n) => `Ver ${n} duelo${n === 1 ? '' : 's'} más`,
+    profileVotesShowLess: 'Ver menos',
 
     rankingTitle: '🏆 Ranking',
-    rankingCombined: 'Combinado',
-    rankingMine: 'El mío',
+    rankingCombined: 'Global',
+    rankingMine: 'Personal',
     rankingColName: 'Nombre',
     rankingColElo: 'ELO',
     rankingColWL: 'W / L',
@@ -220,7 +249,9 @@ export const locales: Record<Locale, Strings> = {
     infoNotBinding: 'Aclaración importante: nos reservamos el derecho de elegir un nombre diferente al ganador 😄 Esto no es vinculante, pero tu voto sí importa.',
     infoLucia: 'La última vez, con Lucía, elegimos los dos nombres ganadores de nena y así se formó su nombre. Pero no necesariamente va a ser lo mismo esta vez.',
     infoGender: 'Todavía no sabemos si va a ser un nene o una nena — ¡lo vamos a saber cuando nazca! Por eso la app tiene las dos categorías.',
-    infoDueDate: 'Fecha de parto estimada: 16 de junio 🍼',
+    infoDueDate: 'Fecha de parto estimada: <strong>16 de junio</strong> 🍼',
+
+    adminViewProfile: 'Ver perfil',
   },
 
   // ── English ───────────────────────────────────────────────────────────────────
@@ -242,6 +273,18 @@ export const locales: Record<Locale, Strings> = {
     loginSubtitle:
       "Pick the perfect name for your baby by playing name duels. The winner wins the family's heart!",
     loginButton: 'Sign in with Google',
+    loginOrDivider: 'or',
+    loginEmailPlaceholder: 'Email',
+    loginPasswordPlaceholder: 'Password',
+    loginNamePlaceholder: 'Your name',
+    loginSignInButton: 'Sign in',
+    loginCreateAccountButton: 'Create account',
+    loginRegisterLink: "Don't have an account? Sign up",
+    loginSignInLink: 'Already have an account? Sign in',
+    loginErrorInvalidCredential: 'Incorrect email or password.',
+    loginErrorEmailInUse: 'That email is already in use.',
+    loginErrorWeakPassword: 'Password must be at least 6 characters.',
+    loginErrorGeneric: 'Could not sign in. Please try again.',
 
     addTitle: '✨ Suggest a name',
     addPlaceholder: 'Type a name...',
@@ -281,10 +324,12 @@ export const locales: Record<Locale, Strings> = {
     profileNoNames: 'No names suggested yet.',
     profileNoVotes: 'No duels voted yet.',
     profileDeleteName: 'Delete name',
+    profileVotesMore: (n) => `Show ${n} more duel${n === 1 ? '' : 's'}`,
+    profileVotesShowLess: 'Show less',
 
     rankingTitle: '🏆 Ranking',
-    rankingCombined: 'Combined',
-    rankingMine: 'Mine',
+    rankingCombined: 'Global',
+    rankingMine: 'Personal',
     rankingColName: 'Name',
     rankingColElo: 'ELO',
     rankingColWL: 'W / L',
@@ -319,6 +364,8 @@ export const locales: Record<Locale, Strings> = {
     infoNotBinding: 'Important note: we reserve the right to choose a different name than the winner 😄 This is not binding, but your vote absolutely counts.',
     infoLucia: 'Last time, with Lucía, we picked the two winning girl names and combined them to form her name. But it won\'t necessarily work the same way this time.',
     infoGender: 'We don\'t know yet whether it\'s a boy or a girl — we\'ll find out at birth! That\'s why the app has both categories.',
-    infoDueDate: 'Estimated due date: June 16 🍼',
+    infoDueDate: 'Estimated due date: <strong>June 16</strong> 🍼',
+
+    adminViewProfile: 'View profile',
   },
 };

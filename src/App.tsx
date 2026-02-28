@@ -87,6 +87,11 @@ export default function App() {
       localStorage.removeItem('babyname-profile-uid');
     }
   }, [profileUserId]);
+
+  // Clear profile when user logs out so a different account doesn't inherit it
+  useEffect(() => {
+    if (!user) setProfileUserId(null);
+  }, [user]);
   const [contentStyle, setContentStyle] = useState<CSSProperties>({});
   const transitionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -251,12 +256,27 @@ export default function App() {
       size="md"
     >
       <Stack gap="md">
+        <Box
+          style={{
+            borderRadius: 16,
+            overflow: 'hidden',
+            maxHeight: 220,
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src="/nosotros.webp"
+            alt="nosotros"
+            style={{ width: '100%', objectFit: 'cover', objectPosition: 'center top' }}
+          />
+        </Box>
         <Text fz="sm">{t.infoPurpose}</Text>
         <Text fz="sm">{t.infoNotBinding}</Text>
         <Text fz="sm">{t.infoLucia}</Text>
         <Text fz="sm">{t.infoGender}</Text>
         <Badge color="pink" variant="light" radius="xl" size="lg" mt="xs">
-          {t.infoDueDate}
+          <span dangerouslySetInnerHTML={{ __html: t.infoDueDate }} />
         </Badge>
       </Stack>
     </Modal>

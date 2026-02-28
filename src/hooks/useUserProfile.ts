@@ -7,10 +7,11 @@ import {
   getDocs,
   writeBatch,
   doc,
-  increment,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Match, UserScore } from '../types';
+import { recalculateUserElo } from '../lib/recalculateElo';
 
 export function useUserProfile(targetUserId: string) {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -33,7 +34,7 @@ export function useUserProfile(targetUserId: string) {
           .map((d) => ({
             id: d.id,
             ...(d.data() as Omit<Match, 'id' | 'createdAt'>),
-            createdAt: d.data().createdAt?.toDate() ?? new Date(),
+            createdAt: d.data().timestamp?.toDate() ?? new Date(),
           }))
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         setMatches(docs);
@@ -76,13 +77,8 @@ export function useUserProfile(targetUserId: string) {
   }, [targetUserId]);
 
   const deleteMatch = useCallback(async (match: Match) => {
-    const winnerScoreId = `${match.userId}_${match.winnerId}`;
-    const loserScoreId = `${match.userId}_${match.loserId}`;
-    const batch = writeBatch(db);
-    batch.delete(doc(db, 'matches', match.id));
-    batch.update(doc(db, 'userScores', winnerScoreId), { wins: increment(-1), matches: increment(-1) });
-    batch.update(doc(db, 'userScores', loserScoreId), { losses: increment(-1), matches: increment(-1) });
-    await batch.commit();
+    await deleteDoc(doc(db, 'matches', match.id));
+    await recalculateUserElo(match.userId);
   }, []);
 
   return { matches, scores, loading, resetVotes, deleteMatch };

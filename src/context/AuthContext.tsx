@@ -3,6 +3,9 @@ import type { ReactNode } from 'react';
 import {
   onAuthStateChanged,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
   signOut,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
@@ -20,6 +23,8 @@ interface AuthContextValue {
   allUsers: UserInfo[];
   loading: boolean;
   signIn: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -28,6 +33,8 @@ export const AuthContext = createContext<AuthContextValue>({
   allUsers: [],
   loading: true,
   signIn: async () => {},
+  signInWithEmail: async () => {},
+  signUpWithEmail: async () => {},
   logOut: async () => {},
 });
 
@@ -70,12 +77,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithPopup(auth, googleProvider);
   }
 
+  async function signInWithEmail(email: string, password: string) {
+    await signInWithEmailAndPassword(auth, email, password);
+  }
+
+  async function signUpWithEmail(email: string, password: string, displayName: string) {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName });
+    await setDoc(
+      doc(db, 'users', cred.user.uid),
+      { uid: cred.user.uid, displayName, photoURL: '', lastSeen: new Date() },
+      { merge: true }
+    );
+  }
+
   async function logOut() {
     await signOut(auth);
   }
 
   return (
-    <AuthContext.Provider value={{ user, allUsers, loading, signIn, logOut }}>
+    <AuthContext.Provider value={{ user, allUsers, loading, signIn, signInWithEmail, signUpWithEmail, logOut }}>
       {children}
     </AuthContext.Provider>
   );

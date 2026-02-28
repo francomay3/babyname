@@ -15,6 +15,7 @@ import {
 import { db } from '../firebase';
 import type { BabyName, Gender } from '../types';
 import { useAuth } from './useAuth';
+import { recalculateUserElo } from '../lib/recalculateElo';
 
 export function useNames(gender?: Gender) {
   const { user } = useAuth();
@@ -58,6 +59,12 @@ export function useNames(gender?: Gender) {
       getDocs(query(collection(db, 'matches'), where('winnerId', '==', nameId))),
       getDocs(query(collection(db, 'matches'), where('loserId', '==', nameId))),
     ]);
+
+    const affectedUserIds = new Set<string>();
+    [...winnerSnap.docs, ...loserSnap.docs].forEach((d) => {
+      affectedUserIds.add(d.data().userId as string);
+    });
+
     const allDocs = [...scoresSnap.docs, ...winnerSnap.docs, ...loserSnap.docs];
     for (let i = 0; i < allDocs.length; i += 500) {
       const batch = writeBatch(db);
@@ -65,6 +72,8 @@ export function useNames(gender?: Gender) {
       await batch.commit();
     }
     await deleteDoc(doc(db, 'names', nameId));
+
+    await Promise.all([...affectedUserIds].map(recalculateUserElo));
   }
 
   return { names, loading, addName, deleteName };
