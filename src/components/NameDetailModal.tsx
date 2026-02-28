@@ -54,16 +54,22 @@ function ModalContent({ name, onNavigateToUser }: { name: BabyName; onNavigateTo
         onClick={() => proposer && onNavigateToUser?.(proposer.uid)}
         style={{ cursor: proposer && onNavigateToUser ? 'pointer' : 'default' }}
       >
-        <Group gap="sm" align="center">
-          <Avatar src={proposer?.photoURL || undefined} size="sm" radius="xl">
+        <Group gap="md" align="center" wrap="nowrap">
+          <Avatar src={proposer?.photoURL || undefined} size="md" radius="xl">
             {proposer?.displayName?.[0]}
           </Avatar>
-          <Text fz="sm" c="dimmed">
-            {t.nameModalProposedBy}{' '}
-            <Text span fw={600} c={proposer && onNavigateToUser ? 'blue' : 'dark'} td={proposer && onNavigateToUser ? 'underline' : undefined}>
+          <Stack gap={2} justify="center">
+            <Text fz="xs" c="dimmed" fw={600}>
+              {t.nameModalProposedBy}
+            </Text>
+            <Text
+              fw={600}
+              c={proposer && onNavigateToUser ? 'pink.6' : 'dark'}
+              td={proposer && onNavigateToUser ? 'underline' : undefined}
+            >
               {proposer?.displayName ?? '?'}
             </Text>
-          </Text>
+          </Stack>
         </Group>
       </UnstyledButton>
 

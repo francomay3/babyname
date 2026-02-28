@@ -64,7 +64,7 @@ export function LoginPage() {
         <Stack gap="lg">
           <Stack align="center" gap="xs">
             <Text fz={56} style={{ lineHeight: 1 }}>
-              👶
+              🍞
             </Text>
             <Title order={1} ta="center" c="pink.6">
               BabyName

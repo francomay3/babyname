@@ -172,6 +172,10 @@ export function useAdmin() {
     await updateDoc(doc(db, 'config', 'admins'), { uids: arrayRemove(uid) });
   }, []);
 
+  const savePhases = useCallback(async (date1: Date, date2: Date) => {
+    await setDoc(doc(db, 'config', 'phases'), { date1, date2 });
+  }, []);
+
   return {
     isAdmin,
     adminUids,
@@ -181,5 +185,6 @@ export function useAdmin() {
     resetDatabase,
     addAdmin,
     removeAdmin,
+    savePhases,
   };
 }

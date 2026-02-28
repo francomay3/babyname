@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Stack,
   TextInput,
@@ -11,14 +11,21 @@ import {
   Paper,
   Title,
   Divider,
+  Alert,
+  Center,
+  ActionIcon,
+  Loader,
+  Modal,
 } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconInfoCircle, IconLock, IconTrash } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useNames } from '../hooks/useNames';
+import { useAdmin } from '../hooks/useAdmin';
 import { useLocale } from '../context/LocaleContext';
+import { usePhases } from '../hooks/usePhases';
 import { NameDetailModal } from '../components/NameDetailModal';
 import type { BabyName, Gender } from '../types';
-import { capitalizeName } from '../lib/utils';
+import { capitalizeName, formatPhaseDate } from '../lib/utils';
 
 interface PendingName {
   id: string;
@@ -27,14 +34,46 @@ interface PendingName {
 }
 
 export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: string) => void }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { phase, date1 } = usePhases();
+  const { isAdmin } = useAdmin();
   const [text, setText] = useState('');
   const [gender, setGender] = useState<Gender>('female');
   const [pendingNames, setPendingNames] = useState<PendingName[]>([]);
   const [recentNames, setRecentNames] = useState<Set<string>>(new Set());
   const [selectedName, setSelectedName] = useState<BabyName | null>(null);
-  const { names: femaleNames } = useNames('female');
-  const { names: maleNames, addName } = useNames('male');
+  const { names: allNames, addName, deleteName } = useNames();
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const femaleNames = useMemo(() => allNames.filter((n) => n.gender === 'female'), [allNames]);
+  const maleNames = useMemo(() => allNames.filter((n) => n.gender === 'male'), [allNames]);
+
+  // Pending names not yet confirmed by Firestore — checked against allNames (not
+  // femaleNames/maleNames) so that deleting a just-added name doesn't cause it
+  // to reappear from the pending list when deletingIds hides it from the real list.
+  const pendingFemale = useMemo(
+    () =>
+      pendingNames
+        .filter(
+          (p) =>
+            p.gender === 'female' &&
+            !allNames.some((n) => n.gender === 'female' && n.text.toLowerCase() === p.text.toLowerCase())
+        )
+        .map((p) => p.text),
+    [pendingNames, allNames]
+  );
+  const pendingMale = useMemo(
+    () =>
+      pendingNames
+        .filter(
+          (p) =>
+            p.gender === 'male' &&
+            !allNames.some((n) => n.gender === 'male' && n.text.toLowerCase() === p.text.toLowerCase())
+        )
+        .map((p) => p.text),
+    [pendingNames, allNames]
+  );
 
   function handleNameClick(nameText: string, nameGender: Gender) {
     const list = nameGender === 'female' ? femaleNames : maleNames;
@@ -43,17 +82,6 @@ export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: st
   }
 
   const genderColor = gender === 'female' ? 'pink' : 'blue';
-
-  // Remove pending names that Firestore has now confirmed
-  useEffect(() => {
-    setPendingNames((prev) => {
-      if (prev.length === 0) return prev;
-      return prev.filter((p) => {
-        const realList = p.gender === 'female' ? femaleNames : maleNames;
-        return !realList.some((n) => n.text.toLowerCase() === p.text.toLowerCase());
-      });
-    });
-  }, [femaleNames, maleNames]);
 
   function markRecent(name: string) {
     setRecentNames((prev) => new Set([...prev, name]));
@@ -112,17 +140,54 @@ export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: st
     }
   }
 
-  const displayFemale = [
-    ...femaleNames.map((n) => n.text),
-    ...pendingNames.filter((n) => n.gender === 'female').map((n) => n.text),
-  ];
-  const displayMale = [
-    ...maleNames.map((n) => n.text),
-    ...pendingNames.filter((n) => n.gender === 'male').map((n) => n.text),
-  ];
+  async function handleDelete(nameId: string) {
+    const target = allNames.find((n) => n.id === nameId);
+    setDeletingIds((prev) => new Set([...prev, nameId]));
+    try {
+      await deleteName(nameId);
+      // Also evict any pending entry for this name so it doesn't resurface
+      // after Firestore confirms the deletion and removes it from allNames.
+      if (target) {
+        setPendingNames((prev) =>
+          prev.filter(
+            (p) =>
+              !(p.gender === target.gender && p.text.toLowerCase() === target.text.toLowerCase())
+          )
+        );
+      }
+    } catch {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(nameId);
+        return next;
+      });
+      notifications.show({ color: 'red', message: t.adminErrorMsg });
+    }
+  }
+
+  if (phase === 'selecting' || phase === 'vote') {
+    return (
+      <Center h={300}>
+        <Stack align="center" gap="md">
+          <IconLock size={40} color="var(--mantine-color-gray-5)" />
+          <Title order={3} ta="center">
+            {t.phaseAddClosed}
+          </Title>
+          <Text c="dimmed" ta="center" fz="sm">
+            {t.phaseAddClosedSub}
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
 
   return (
     <Stack gap="xl">
+      {date1 && (
+        <Alert icon={<IconInfoCircle size={16} />} color="blue" radius="lg">
+          <span dangerouslySetInnerHTML={{ __html: t.phaseAddNotice(formatPhaseDate(date1, locale)) }} />
+        </Alert>
+      )}
       <Paper shadow="sm" radius="lg" p="lg" withBorder>
         <Stack gap="md">
           <Title order={3} c={`${genderColor}.6`}>
@@ -162,46 +227,89 @@ export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: st
       <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="xl">
         <NameList
           title={`👧 ${t.femalePluralLabel}`}
-          names={displayFemale}
+          realNames={femaleNames}
+          pendingNames={pendingFemale}
           color="pink"
-          countLabel={t.addNamesCount(displayFemale.length)}
+          countLabel={t.addNamesCount(femaleNames.length + pendingFemale.length)}
           emptyLabel={t.addEmptyState}
           recentNames={recentNames}
           onNameClick={(name) => handleNameClick(name, 'female')}
+          onDelete={isAdmin ? setConfirmDeleteId : undefined}
+          deletingIds={deletingIds}
         />
         <NameList
           title={`👦 ${t.malePluralLabel}`}
-          names={displayMale}
+          realNames={maleNames}
+          pendingNames={pendingMale}
           color="blue"
-          countLabel={t.addNamesCount(displayMale.length)}
+          countLabel={t.addNamesCount(maleNames.length + pendingMale.length)}
           emptyLabel={t.addEmptyState}
           recentNames={recentNames}
           onNameClick={(name) => handleNameClick(name, 'male')}
+          onDelete={isAdmin ? setConfirmDeleteId : undefined}
+          deletingIds={deletingIds}
         />
       </SimpleGrid>
 
       <NameDetailModal name={selectedName} onClose={() => setSelectedName(null)} onNavigateToUser={onNavigateToUser} />
+
+      <Modal
+        opened={confirmDeleteId !== null}
+        onClose={() => setConfirmDeleteId(null)}
+        title={t.adminConfirmTitle}
+        size="sm"
+        centered
+      >
+        <Text size="sm" mb="lg">
+          {t.profileDeleteName}:{' '}
+          <Text span fw={700}>
+            {capitalizeName(allNames.find((n) => n.id === confirmDeleteId)?.text ?? '')}
+          </Text>
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="default" size="sm" onClick={() => setConfirmDeleteId(null)}>
+            {t.adminCancel}
+          </Button>
+          <Button
+            color="red"
+            size="sm"
+            onClick={() => {
+              if (confirmDeleteId) handleDelete(confirmDeleteId);
+              setConfirmDeleteId(null);
+            }}
+          >
+            {t.profileDeleteName}
+          </Button>
+        </Group>
+      </Modal>
     </Stack>
   );
 }
 
 function NameList({
   title,
-  names,
+  realNames,
+  pendingNames,
   color,
   countLabel,
   emptyLabel,
   recentNames,
   onNameClick,
+  onDelete,
+  deletingIds,
 }: {
   title: string;
-  names: string[];
+  realNames: BabyName[];
+  pendingNames: string[];
   color: string;
   countLabel: string;
   emptyLabel: string;
   recentNames: Set<string>;
   onNameClick: (name: string) => void;
+  onDelete?: (id: string) => void;
+  deletingIds?: Set<string>;
 }) {
+  const isEmpty = realNames.length === 0 && pendingNames.length === 0;
   return (
     <Paper shadow="sm" radius="lg" p="lg" withBorder>
       <Stack gap="sm">
@@ -212,14 +320,31 @@ function NameList({
           </Badge>
         </Group>
         <Divider />
-        {names.length === 0 ? (
+        {isEmpty ? (
           <Text c="dimmed" fz="sm" ta="center" py="md">
             {emptyLabel}
           </Text>
         ) : (
           <Stack gap={4}>
-            {names.map((name) => (
-              <NameItem key={name} name={name} color={color} isNew={recentNames.has(name)} onClick={() => onNameClick(name)} />
+            {realNames.map((name) => (
+              <NameItem
+                key={name.id}
+                name={name.text}
+                color={color}
+                isNew={recentNames.has(name.text)}
+                onClick={() => onNameClick(name.text)}
+                onDelete={onDelete ? () => onDelete(name.id) : undefined}
+                isDeleting={deletingIds?.has(name.id) ?? false}
+              />
+            ))}
+            {pendingNames.map((name) => (
+              <NameItem
+                key={name}
+                name={name}
+                color={color}
+                isNew={recentNames.has(name)}
+                onClick={() => onNameClick(name)}
+              />
             ))}
           </Stack>
         )}
@@ -233,11 +358,15 @@ function NameItem({
   color,
   isNew,
   onClick,
+  onDelete,
+  isDeleting = false,
 }: {
   name: string;
   color: string;
   isNew: boolean;
   onClick: () => void;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }) {
   // Pre-existing items start fully visible (no animation).
   // New items start hidden and slide in via double-rAF.
@@ -251,23 +380,35 @@ function NameItem({
   }, []);
 
   return (
-    <Text
-      fz="sm"
+    <Group
+      justify="space-between"
+      wrap="nowrap"
       px="xs"
       py={4}
-      onClick={onClick}
       style={{
         opacity: entered ? 1 : 0,
         transform: entered ? 'translateX(0)' : 'translateX(-10px)',
         backgroundColor:
           isNew && entered ? `var(--mantine-color-${color}-1)` : 'transparent',
         borderRadius: 6,
-        cursor: 'pointer',
-        transition:
-          'opacity 0.2s ease, transform 0.2s ease, background-color 1s ease',
+        transition: 'opacity 0.2s ease, transform 0.2s ease, background-color 1s ease',
       }}
     >
-      {capitalizeName(name)}
-    </Text>
+      <Text fz="sm" onClick={onClick} style={{ cursor: 'pointer', flex: 1 }}>
+        {capitalizeName(name)}
+      </Text>
+      {isDeleting ? (
+        <Loader size="xs" color="red" />
+      ) : onDelete ? (
+        <ActionIcon
+          variant="subtle"
+          color="red"
+          size="xs"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        >
+          <IconTrash size={12} />
+        </ActionIcon>
+      ) : null}
+    </Group>
   );
 }

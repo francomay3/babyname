@@ -111,10 +111,29 @@ export interface Strings {
   infoNotBinding: string;
   infoLucia: string;
   infoGender: string;
-  infoDueDate: string;
+  infoDueDateLabel: string;
+  infoDueDateValue: string;
+
+  // ── Phase UI — AddNamesPage ───────────────────────────────────────────────────
+  phaseAddNotice: (date: string) => string;
+  phaseAddClosed: string;
+  phaseAddClosedSub: string;
+
+  // ── Phase UI — VotePage ───────────────────────────────────────────────────────
+  phaseVoteNotYetTitle: string;
+  phaseVoteNotYetBody: (date: string) => string;
+  phaseSelectingTitle: string;
+  phaseSelectingBody: (date: string) => string;
 
   // ── Admin panel ──────────────────────────────────────────────────────────────
   adminViewProfile: string;
+  adminPhasesSection: string;
+  adminDate1Label: string;
+  adminDate2Label: string;
+  adminPhasesSaved: string;
+  adminPhaseAdd: string;
+  adminPhaseSelecting: string;
+  adminPhaseVote: string;
   adminDrawerTitle: string;
   adminSectionUsers: string;
   adminSectionAdmins: string;
@@ -144,7 +163,7 @@ export const locales: Record<Locale, Strings> = {
     logout: 'Cerrar sesión',
     langToggleLabel: '🇺🇸 Switch to English',
     langToggleLabelMobile: '🇺🇸',
-    appTitle: '👶 BabyName',
+    appTitle: '🍞 BabyBread',
 
     tabNames: '✨ Nombres',
     tabVote: '⚔️ Votar',
@@ -156,7 +175,7 @@ export const locales: Record<Locale, Strings> = {
     malePluralLabel: 'Nenes',
 
     loginSubtitle:
-      'Elegí el nombre perfecto para tu bebé jugando a duelos entre nombres. ¡El ganador se gana el corazón de la familia!',
+      'Ayudanos a elegir el nombre del bebe que tenemos en el horno 🍞',
     loginButton: 'Entrar con Google',
     loginOrDivider: 'o',
     loginEmailPlaceholder: 'Email',
@@ -175,7 +194,7 @@ export const locales: Record<Locale, Strings> = {
     addPlaceholder: 'Escribí un nombre...',
     addButton: 'Agregar',
     addNamesCount: (n) => `${n} nombres`,
-    addEmptyState: 'Todavía no hay nombres. ¡Sé el primero!',
+    addEmptyState: 'Todavía no hay nombres. ¡Empezá vos!',
     addNotifDuplicateTitle: '¡Ya existe!',
     addNotifDuplicateFemaleMsg: (name) => `"${name}" ya está en la lista de nenas.`,
     addNotifDuplicateMaleMsg: (name) => `"${name}" ya está en la lista de nenes.`,
@@ -219,8 +238,8 @@ export const locales: Record<Locale, Strings> = {
     rankingColElo: 'ELO',
     rankingColWL: 'W / L',
     rankingColBreakdown: 'Desglose',
-    rankingNoVotesFemale: 'Todavía no hay votos para nenas. ¡Empezá a votar!',
-    rankingNoVotesMale: 'Todavía no hay votos para nenes. ¡Empezá a votar!',
+    rankingNoVotesFemale: 'Todavía no hay votos para nenas.',
+    rankingNoVotesMale: 'Todavía no hay votos para nenes.',
 
     adminDrawerTitle: '⚙️ Admin',
     adminSectionUsers: 'Usuarios',
@@ -245,13 +264,29 @@ export const locales: Record<Locale, Strings> = {
     adminErrorMsg: 'Ocurrió un error. Intentá de nuevo.',
 
     infoTitle: '¿De qué se trata?',
-    infoPurpose: 'Esta app es para elegir el nombre del bebé al nacer, involucrando a amigos y familia en la elección. ¡Nos encanta que todos puedan participar!',
-    infoNotBinding: 'Aclaración importante: nos reservamos el derecho de elegir un nombre diferente al ganador 😄 Esto no es vinculante, pero tu voto sí importa.',
+    infoPurpose: 'Esta app es para elegir el nombre del bebé al nacer, involucrando a amigos y familia en la elección.',
+    infoNotBinding: '🚨 Aclaración importante: nos reservamos el derecho de elegir un nombre diferente al ganador 😄 Esto no es vinculante, pero tu voto sí importa.',
     infoLucia: 'La última vez, con Lucía, elegimos los dos nombres ganadores de nena y así se formó su nombre. Pero no necesariamente va a ser lo mismo esta vez.',
-    infoGender: 'Todavía no sabemos si va a ser un nene o una nena — ¡lo vamos a saber cuando nazca! Por eso la app tiene las dos categorías.',
-    infoDueDate: 'Fecha de parto estimada: <strong>16 de junio</strong> 🍼',
+    infoGender: 'Todavía no sabemos si va a ser un nene o una nena. ¡lo vamos a saber cuando nazca! Por eso la app tiene las dos categorías.',
+    infoDueDateLabel: 'Fecha estimada de parto:',
+    infoDueDateValue: '<strong>16 de junio</strong> 🍼',
 
     adminViewProfile: 'Ver perfil',
+
+    phaseAddNotice: (date) => `Podés agregar nombres hasta el <strong>${date}</strong>. Después empieza la votación final!`,
+    phaseAddClosed: 'Esta sección está cerrada',
+    phaseAddClosedSub: 'Los nombres seleccionados ya están listos para votar',
+    phaseVoteNotYetTitle: 'La votacion todavia no empezó!',
+    phaseVoteNotYetBody: (date) => `Podés agregar nombres hasta el <strong>${date}</strong>. La votación aún no comenzó.`,
+    phaseSelectingTitle: 'Estamos eligiendo los nombres finales',
+    phaseSelectingBody: (date) => `El agregado de nombres cerró. La votación comienza el <strong>${date}</strong>.`,
+    adminPhasesSection: 'Fases',
+    adminDate1Label: 'Fin de sugerencias',
+    adminDate2Label: 'Inicio de votación',
+    adminPhasesSaved: '¡Guardar fechas!',
+    adminPhaseAdd: 'Sugerencias abiertas',
+    adminPhaseSelecting: 'Selección en curso',
+    adminPhaseVote: 'Votación abierta',
   },
 
   // ── English ───────────────────────────────────────────────────────────────────
@@ -259,7 +294,7 @@ export const locales: Record<Locale, Strings> = {
     logout: 'Sign out',
     langToggleLabel: '🇦🇷 Cambiar a español',
     langToggleLabelMobile: '🇦🇷',
-    appTitle: '👶 BabyName',
+    appTitle: '🍞 BabyBread',
 
     tabNames: '✨ Names',
     tabVote: '⚔️ Vote',
@@ -271,7 +306,7 @@ export const locales: Record<Locale, Strings> = {
     malePluralLabel: 'Boys',
 
     loginSubtitle:
-      "Pick the perfect name for your baby by playing name duels. The winner wins the family's heart!",
+      "Help us choose the name of the baby mom is currently baking 🍞",
     loginButton: 'Sign in with Google',
     loginOrDivider: 'or',
     loginEmailPlaceholder: 'Email',
@@ -360,12 +395,28 @@ export const locales: Record<Locale, Strings> = {
     adminErrorMsg: 'An error occurred. Please try again.',
 
     infoTitle: 'What is this?',
-    infoPurpose: 'This app is for choosing the baby\'s name at birth, involving friends and family in the decision. We love having everyone participate!',
-    infoNotBinding: 'Important note: we reserve the right to choose a different name than the winner 😄 This is not binding, but your vote absolutely counts.',
+    infoPurpose: 'This app is for choosing the baby\'s name at birth, involving friends and family in the decision.',
+    infoNotBinding: '🚨 Important note: we reserve the right to choose a different name than the winner 😄 This is not binding, but your vote absolutely counts.',
     infoLucia: 'Last time, with Lucía, we picked the two winning girl names and combined them to form her name. But it won\'t necessarily work the same way this time.',
-    infoGender: 'We don\'t know yet whether it\'s a boy or a girl — we\'ll find out at birth! That\'s why the app has both categories.',
-    infoDueDate: 'Estimated due date: <strong>June 16</strong> 🍼',
+    infoGender: 'We don\'t know yet whether it\'s a boy or a girl. We\'ll find out at birth! That\'s why the app has both categories.',
+    infoDueDateLabel: 'Estimated due date:',
+    infoDueDateValue: '<strong>June 16</strong> 🍼',
 
     adminViewProfile: 'View profile',
+
+    phaseAddNotice: (date) => `You can suggest names until <strong>${date}</strong>. Then the voting phase starts!`,
+    phaseAddClosed: 'This section is closed',
+    phaseAddClosedSub: 'The selected names are ready for voting',
+    phaseVoteNotYetTitle: "Voting hasn't started yet!",
+    phaseVoteNotYetBody: (date) => `You can suggest names until <strong>${date}</strong>. Voting hasn't begun yet.`,
+    phaseSelectingTitle: "We're choosing the final names",
+    phaseSelectingBody: (date) => `Name suggestions are closed. Voting starts on <strong>${date}</strong>.`,
+    adminPhasesSection: 'Phases',
+    adminDate1Label: 'End of suggestions',
+    adminDate2Label: 'Start of voting',
+    adminPhasesSaved: 'Save dates!',
+    adminPhaseAdd: 'Suggestions open',
+    adminPhaseSelecting: 'Selection in progress',
+    adminPhaseVote: 'Voting open',
   },
 };

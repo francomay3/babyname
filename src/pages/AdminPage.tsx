@@ -16,6 +16,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import {
   IconAlertTriangle,
+  IconCalendar,
   IconExternalLink,
   IconTrash,
   IconUserOff,
@@ -23,22 +24,32 @@ import {
   IconUserX,
 } from '@tabler/icons-react';
 import { useAdmin } from '../hooks/useAdmin';
+import { usePhases } from '../hooks/usePhases';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../hooks/useAuth';
 
 type ConfirmAction = { action: 'resetVotes' | 'deleteUser'; uid: string; name: string };
 
+function toDatetimeLocal(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string) => void }) {
   const { t } = useLocale();
   const { user } = useAuth();
-  const { adminUids, allUsersWithStats, resetUserVotes, deleteUser, resetDatabase, addAdmin, removeAdmin } =
+  const { adminUids, allUsersWithStats, resetUserVotes, deleteUser, resetDatabase, addAdmin, removeAdmin, savePhases } =
     useAdmin();
+  const { phase, date1, date2 } = usePhases();
 
   const [confirmModal, setConfirmModal] = useState<ConfirmAction | null>(null);
   const [resetDbModal, setResetDbModal] = useState(false);
   const [resetInput, setResetInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
+  const [date1Input, setDate1Input] = useState(() => toDatetimeLocal(date1));
+  const [date2Input, setDate2Input] = useState(() => toDatetimeLocal(date2));
+  const [savingPhases, setSavingPhases] = useState(false);
 
   async function handleConfirm() {
     if (!confirmModal) return;
@@ -81,6 +92,21 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
       setSelectedUid(null);
     } catch {
       notifications.show({ color: 'red', message: t.adminErrorMsg });
+    }
+  }
+
+  async function handleSavePhases() {
+    const d1 = new Date(date1Input);
+    const d2 = new Date(date2Input);
+    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return;
+    setSavingPhases(true);
+    try {
+      await savePhases(d1, d2);
+      notifications.show({ color: 'green', message: t.adminPhasesSaved });
+    } catch {
+      notifications.show({ color: 'red', message: t.adminErrorMsg });
+    } finally {
+      setSavingPhases(false);
     }
   }
 
@@ -155,7 +181,53 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
           </Accordion.Panel>
         </Accordion.Item>
 
-        {/* ── Section 2: Admins ────────────────────────────────────────────── */}
+        {/* ── Section 2: Phases ────────────────────────────────────────────── */}
+        <Accordion.Item value="phases">
+          <Accordion.Control icon={<IconCalendar size={16} />}>
+            <Text fw={500}>{t.adminPhasesSection}</Text>
+          </Accordion.Control>
+          <Accordion.Panel>
+            <Stack gap="sm">
+              <Group gap="xs">
+                <Text size="sm" c="dimmed">Fase actual:</Text>
+                <Badge
+                  size="sm"
+                  color={phase === 'vote' ? 'green' : phase === 'selecting' ? 'yellow' : 'blue'}
+                  variant="light"
+                >
+                  {phase === 'vote'
+                    ? t.adminPhaseVote
+                    : phase === 'selecting'
+                    ? t.adminPhaseSelecting
+                    : t.adminPhaseAdd}
+                </Badge>
+              </Group>
+              <TextInput
+                label={t.adminDate1Label}
+                type="datetime-local"
+                value={date1Input}
+                onChange={(e) => setDate1Input(e.currentTarget.value)}
+                size="sm"
+              />
+              <TextInput
+                label={t.adminDate2Label}
+                type="datetime-local"
+                value={date2Input}
+                onChange={(e) => setDate2Input(e.currentTarget.value)}
+                size="sm"
+              />
+              <Button
+                size="xs"
+                loading={savingPhases}
+                onClick={handleSavePhases}
+              >
+                {t.adminPhasesSaved}
+              </Button>
+            </Stack>
+          </Accordion.Panel>
+        </Accordion.Item>
+
+        {/* ── Section 3: Admins ────────────────────────────────────────────── */}
         <Accordion.Item value="admins">
           <Accordion.Control>
             <Text fw={500}>{t.adminSectionAdmins}</Text>
@@ -216,7 +288,7 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
           </Accordion.Panel>
         </Accordion.Item>
 
-        {/* ── Section 3: Danger Zone ───────────────────────────────────────── */}
+        {/* ── Section 4: Danger Zone ───────────────────────────────────────── */}
         <Accordion.Item value="danger">
           <Accordion.Control
             icon={<IconAlertTriangle size={16} color="var(--mantine-color-red-6)" />}

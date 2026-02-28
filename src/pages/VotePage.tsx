@@ -19,11 +19,54 @@ import { db } from '../firebase';
 import { useVote } from '../hooks/useVote';
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../context/LocaleContext';
+import { usePhases } from '../hooks/usePhases';
+import type { Phase } from '../hooks/usePhases';
 import type { BabyName, UserScore } from '../types';
-import { capitalizeName } from '../lib/utils';
+import { capitalizeName, formatPhaseDate } from '../lib/utils';
+import type { Locale } from '../locales';
 
 interface Props {
   onGoToNames: () => void;
+}
+
+function VoteLockedScreen({
+  phase,
+  date1,
+  date2,
+  locale,
+  onGoToNames,
+}: {
+  phase: Phase;
+  date1: Date;
+  date2: Date;
+  locale: Locale;
+  onGoToNames: () => void;
+}) {
+  const { t } = useLocale();
+  const title = phase === 'add' ? t.phaseVoteNotYetTitle : t.phaseSelectingTitle;
+  const body =
+    phase === 'add'
+      ? t.phaseVoteNotYetBody(formatPhaseDate(date1, locale))
+      : t.phaseSelectingBody(formatPhaseDate(date2, locale));
+
+  return (
+    <Center h={300}>
+      <Stack align="center" gap="md">
+        <Text fz={48}>{phase === 'add' ? '⏳' : '🔍'}</Text>
+        <Title order={3} ta="center">
+          {title}
+        </Title>
+        <Text c="dimmed" ta="center" fz="sm" maw={320}>
+          <span dangerouslySetInnerHTML={{ __html: body }} />
+        </Text>
+        {phase === 'add' && (
+          <Anchor component="button" onClick={onGoToNames} c="pink.6" fz="sm">
+            {t.voteNotEnoughLink}
+          </Anchor>
+        )}
+      </Stack>
+    </Center>
+  );
 }
 
 function pickPair(
@@ -64,7 +107,8 @@ function pickPair(
 export function VotePage({ onGoToNames }: Props) {
   const { user } = useAuth();
   const { vote } = useVote();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { phase, date1, date2, loading: phaseLoading } = usePhases();
 
   const [savedPairIds, setSavedPairIds] = useLocalStorage<[string, string] | null>({
     key: 'babyname-current-pair',
@@ -85,7 +129,7 @@ export function VotePage({ onGoToNames }: Props) {
 
   namesRef.current = names;
 
-  const isLoading = !namesLoaded || !votedPairsLoaded;
+  const isLoading = !namesLoaded || !votedPairsLoaded || phaseLoading;
 
   // Load ALL names (both genders)
   useEffect(() => {
@@ -223,6 +267,10 @@ export function VotePage({ onGoToNames }: Props) {
         <Loader color="pink" />
       </Center>
     );
+  }
+
+  if (phase === 'add' || phase === 'selecting') {
+    return <VoteLockedScreen phase={phase} date1={date1} date2={date2} locale={locale} onGoToNames={onGoToNames} />;
   }
 
   if (!hasEnoughNames) {

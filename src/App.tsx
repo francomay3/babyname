@@ -19,10 +19,11 @@ import {
   Badge,
 } from '@mantine/core';
 import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
-import { IconLogout, IconChevronDown, IconSettings, IconUser, IconInfoCircle } from '@tabler/icons-react';
+import { IconLogout, IconChevronDown, IconSettings, IconUser, IconInfoCircle, IconBrandGithub } from '@tabler/icons-react';
 import { useAuth } from './hooks/useAuth';
 import { useLocale } from './context/LocaleContext';
 import { useAdmin } from './hooks/useAdmin';
+import { usePhases } from './hooks/usePhases';
 import { LoginPage } from './pages/LoginPage';
 import { AddNamesPage } from './pages/AddNamesPage';
 import { VotePage } from './pages/VotePage';
@@ -39,6 +40,7 @@ export default function App() {
   const { user, loading, logOut } = useAuth();
   const { t, toggleLocale } = useLocale();
   const { isAdmin } = useAdmin();
+  const { phase, loading: phaseLoading } = usePhases();
   const [adminOpen, setAdminOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const isVerySmall = useMediaQuery('(max-width: 380px)');
@@ -72,6 +74,17 @@ export default function App() {
     }
     return 'vote';
   });
+
+  // If no tab was saved in localStorage, set the default based on phase once it loads.
+  const tabWasPreset = useRef(localStorage.getItem('babyname-tab') !== null);
+  useEffect(() => {
+    if (!phaseLoading && !tabWasPreset.current) {
+      const defaultTab: Tab = phase === 'add' ? 'add' : 'vote';
+      setTab(defaultTab);
+      setDisplayTab(defaultTab);
+      tabWasPreset.current = true;
+    }
+  }, [phaseLoading, phase]);
 
   const [profileUserId, setProfileUserId] = useState<string | null>(() => {
     try {
@@ -145,9 +158,9 @@ export default function App() {
     <AppShell header={{ height: 60 }} padding="md">
       <AppShell.Header px={{ base: 'xs', xs: 'md' }}>
         <Group h="100%" justify="space-between">
-          <UnstyledButton onClick={() => { setProfileUserId(null); handleTabChange('vote'); }}>
+          <UnstyledButton onClick={() => { setProfileUserId(null); handleTabChange(phase === 'add' ? 'add' : 'vote'); }}>
             <Text fw={700} fz="lg" c="pink.6" visibleFrom="xs">{t.appTitle}</Text>
-            <Text fw={700} fz="xl" c="pink.6" hiddenFrom="xs">👶</Text>
+            <Text fw={700} fz="xl" c="pink.6" hiddenFrom="xs">🍞</Text>
           </UnstyledButton>
           <Group gap="xs" align="center">
             <ActionIcon variant="subtle" color="pink" size="sm" onClick={() => setInfoOpen(true)}>
@@ -200,8 +213,8 @@ export default function App() {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main>
-        <Flex justify="center">
+      <AppShell.Main style={{ display: 'flex', flexDirection: 'column' }}>
+        <Flex justify="center" style={{ flex: 1 }}>
         <Box maw="700" w="100%">
           {profileUserId ? (
             <UserProfilePage
@@ -235,6 +248,29 @@ export default function App() {
           )}
         </Box>
         </Flex>
+        <Box
+          mt="xl"
+          style={{
+            marginLeft: 'calc(-1 * var(--app-shell-padding))',
+            marginRight: 'calc(-1 * var(--app-shell-padding))',
+            marginBottom: 'calc(-1 * var(--app-shell-padding))',
+          }}
+        >
+          <Group justify="center" gap={6} py="md" bg="pink.6">
+            <IconBrandGithub size={14} color="white" />
+            <Text
+              component="a"
+              href="https://github.com/francomay3/babyname"
+              target="_blank"
+              rel="noopener noreferrer"
+              fz="xs"
+              c="white"
+              td="underline"
+            >
+              github.com/francomay3/babyname
+            </Text>
+          </Group>
+        </Box>
       </AppShell.Main>
     </AppShell>
 
@@ -275,9 +311,12 @@ export default function App() {
         <Text fz="sm">{t.infoNotBinding}</Text>
         <Text fz="sm">{t.infoLucia}</Text>
         <Text fz="sm">{t.infoGender}</Text>
-        <Badge color="pink" variant="light" radius="xl" size="lg" mt="xs">
-          <span dangerouslySetInnerHTML={{ __html: t.infoDueDate }} />
-        </Badge>
+        <Group gap="xs" wrap="wrap" mt="xs">
+          <Text fz="sm" fw={700}>{t.infoDueDateLabel}</Text>
+          <Badge color="pink" variant="light" radius="xl" size="lg">
+            <span dangerouslySetInnerHTML={{ __html: t.infoDueDateValue }} />
+          </Badge>
+        </Group>
       </Stack>
     </Modal>
     </>

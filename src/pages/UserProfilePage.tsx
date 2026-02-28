@@ -384,7 +384,7 @@ export function ProfileLink({
   const userInfo = allUsers.find((u) => u.uid === userId);
   return (
     <UnstyledButton onClick={() => onNavigate(userId)}>
-      <Text fz="sm" c="blue" td="underline">
+      <Text fz="sm" c="pink.6" td="underline">
         {userInfo?.displayName ?? userId}
       </Text>
     </UnstyledButton>
