@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Stack,
   TextInput,
@@ -17,20 +17,41 @@ import { notifications } from '@mantine/notifications';
 import { useNames } from '../hooks/useNames';
 import type { Gender } from '../types';
 
+interface PendingName {
+  id: string;
+  text: string;
+  gender: Gender;
+}
+
 export function AddNamesPage() {
   const [text, setText] = useState('');
   const [gender, setGender] = useState<Gender>('female');
+  const [pendingNames, setPendingNames] = useState<PendingName[]>([]);
   const { names: femaleNames } = useNames('female');
   const { names: maleNames, addName } = useNames('male');
+
+  const genderColor = gender === 'female' ? 'pink' : 'blue';
+
+  // Remove pending names that Firestore has now confirmed
+  useEffect(() => {
+    setPendingNames((prev) => {
+      if (prev.length === 0) return prev;
+      return prev.filter((p) => {
+        const realList = p.gender === 'female' ? femaleNames : maleNames;
+        return !realList.some((n) => n.text.toLowerCase() === p.text.toLowerCase());
+      });
+    });
+  }, [femaleNames, maleNames]);
 
   async function handleSubmit() {
     const trimmed = text.trim();
     if (!trimmed) return;
 
     const all = [...femaleNames, ...maleNames];
-    const duplicate = all.find(
-      (n) => n.text.toLowerCase() === trimmed.toLowerCase() && n.gender === gender
-    );
+    const duplicate =
+      all.find((n) => n.text.toLowerCase() === trimmed.toLowerCase() && n.gender === gender) ||
+      pendingNames.find((n) => n.text.toLowerCase() === trimmed.toLowerCase() && n.gender === gender);
+
     if (duplicate) {
       notifications.show({
         color: 'orange',
@@ -40,16 +61,38 @@ export function AddNamesPage() {
       return;
     }
 
-    await addName(trimmed, gender);
+    const tempId = `opt_${Date.now()}`;
+
+    // Optimistic update — clear input and add to list immediately
+    setPendingNames((prev) => [...prev, { id: tempId, text: trimmed, gender }]);
     setText('');
-    notifications.show({
-      color: 'pink',
-      title: '¡Nombre agregado!',
-      message: `"${trimmed}" entró al ruedo 🎉`,
-    });
+
+    try {
+      await addName(trimmed, gender);
+      notifications.show({
+        color: genderColor,
+        title: '¡Nombre agregado!',
+        message: `"${trimmed}" entró al ruedo 🎉`,
+      });
+    } catch {
+      // Rollback
+      setPendingNames((prev) => prev.filter((n) => n.id !== tempId));
+      notifications.show({
+        color: 'red',
+        title: 'Error',
+        message: 'No se pudo agregar el nombre. Intentá de nuevo.',
+      });
+    }
   }
 
-  const genderColor = gender === 'female' ? 'pink' : 'blue';
+  const displayFemale = [
+    ...femaleNames.map((n) => n.text),
+    ...pendingNames.filter((n) => n.gender === 'female').map((n) => n.text),
+  ];
+  const displayMale = [
+    ...maleNames.map((n) => n.text),
+    ...pendingNames.filter((n) => n.gender === 'male').map((n) => n.text),
+  ];
 
   return (
     <Stack gap="xl">
@@ -90,8 +133,8 @@ export function AddNamesPage() {
       </Paper>
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
-        <NameList title="👧 Nenas" names={femaleNames.map((n) => n.text)} color="pink" />
-        <NameList title="👦 Nenes" names={maleNames.map((n) => n.text)} color="blue" />
+        <NameList title="👧 Nenas" names={displayFemale} color="pink" />
+        <NameList title="👦 Nenes" names={displayMale} color="blue" />
       </SimpleGrid>
     </Stack>
   );

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import {
   Stack,
   SimpleGrid,
@@ -11,6 +12,8 @@ import {
   Title,
   Anchor,
 } from '@mantine/core';
+import { useLocalStorage } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useVote } from '../hooks/useVote';
@@ -39,16 +42,13 @@ function pickPair(
     for (let i = 0; i < group.length; i++) {
       for (let j = i + 1; j < group.length; j++) {
         const key = [group[i].id, group[j].id].sort().join('|');
-        if (!votedPairs.has(key)) {
-          validPairs.push([group[i], group[j]]);
-        }
+        if (!votedPairs.has(key)) validPairs.push([group[i], group[j]]);
       }
     }
   }
 
   if (validPairs.length === 0) return null;
 
-  // Weight each pair by the sum of 1/(matches+1) for both names
   const weights = validPairs.map(([a, b]) => 1 / (a.matches + 1) + 1 / (b.matches + 1));
   const total = weights.reduce((s, w) => s + w, 0);
   let r = Math.random() * total;
@@ -61,29 +61,41 @@ function pickPair(
 
 export function VotePage({ onGoToNames }: Props) {
   const { user } = useAuth();
-  const { vote, loading: voteLoading } = useVote();
+  const { vote } = useVote();
+
+  const [savedPairIds, setSavedPairIds] = useLocalStorage<[string, string] | null>({
+    key: 'babyname-current-pair',
+    defaultValue: null,
+  });
 
   const [names, setNames] = useState<BabyName[]>([]);
-  const [scores, setScores] = useState<UserScore[]>([]);
   const [pair, setPair] = useState<[BabyName, BabyName] | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [namesLoaded, setNamesLoaded] = useState(false);
+  const [votedPairsLoaded, setVotedPairsLoaded] = useState(false);
   const [noPairsLeft, setNoPairsLeft] = useState(false);
+  const [pairStyle, setPairStyle] = useState<CSSProperties>({});
 
+  // Refs so setTimeout callbacks always read the latest values
+  const namesRef = useRef<BabyName[]>([]);
+  const scoresRef = useRef<UserScore[]>([]);
   const votedPairsRef = useRef<Set<string>>(new Set());
-  const getNextPairRef = useRef<() => void>(() => {});
+
+  namesRef.current = names;
+
+  const isLoading = !namesLoaded || !votedPairsLoaded;
 
   // Load ALL names (both genders)
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'names'), (snap) => {
-      setNames(
-        snap.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<BabyName, 'id' | 'addedAt'>),
-          addedAt: doc.data().addedAt?.toDate() ?? new Date(),
-        }))
-      );
-      setLoading(false);
+      const loaded = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<BabyName, 'id' | 'addedAt'>),
+        addedAt: doc.data().addedAt?.toDate() ?? new Date(),
+      }));
+      setNames(loaded);
+      namesRef.current = loaded;
+      setNamesLoaded(true);
     });
     return unsub;
   }, []);
@@ -93,12 +105,10 @@ export function VotePage({ onGoToNames }: Props) {
     if (!user) return;
     const q = query(collection(db, 'userScores'), where('userId', '==', user.uid));
     const unsub = onSnapshot(q, (snap) => {
-      setScores(
-        snap.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<UserScore, 'id'>),
-        }))
-      );
+      scoresRef.current = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<UserScore, 'id'>),
+      }));
     });
     return unsub;
   }, [user]);
@@ -115,48 +125,101 @@ export function VotePage({ onGoToNames }: Props) {
         pairs.add(key);
       });
       votedPairsRef.current = pairs;
+      setVotedPairsLoaded(true);
     });
     return unsub;
   }, [user]);
 
-  const getNextPair = useCallback(() => {
-    const result = pickPair(names, scores, votedPairsRef.current);
+  function computeNextPair() {
+    return pickPair(namesRef.current, scoresRef.current, votedPairsRef.current);
+  }
+
+  // Show a pair — with optional right-to-left slide-in animation
+  function showNewPair(result: [BabyName, BabyName] | null, animate: boolean) {
+    setPicked(null);
     if (result === null) {
       setNoPairsLeft(true);
       setPair(null);
-    } else {
-      setNoPairsLeft(false);
-      setPair(result);
+      setSavedPairIds(null);
+      setPairStyle({});
+      return;
     }
-    setPicked(null);
-  }, [names, scores]);
+    setNoPairsLeft(false);
+    setSavedPairIds([result[0].id, result[1].id]);
+    setPair(result);
 
-  // Keep ref in sync so setTimeout always calls the latest version
-  useEffect(() => {
-    getNextPairRef.current = getNextPair;
-  }, [getNextPair]);
+    if (animate) {
+      // Start off-screen to the right
+      setPairStyle({ opacity: 0, transform: 'translateX(32px)', transition: 'none' });
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() =>
+          setPairStyle({
+            opacity: 1,
+            transform: 'translateX(0)',
+            transition: 'opacity 0.2s ease, transform 0.2s ease',
+          })
+        )
+      );
+    } else {
+      setPairStyle({ opacity: 1 });
+    }
+  }
 
-  // Initial load
+  // Exit to the left, then load next pair from the right
+  function transitionToNext() {
+    setPairStyle({
+      opacity: 0,
+      transform: 'translateX(-32px)',
+      transition: 'opacity 0.15s ease, transform 0.15s ease',
+      pointerEvents: 'none',
+    });
+    setTimeout(() => showNewPair(computeNextPair(), true), 155);
+  }
+
+  // Initial load: restore saved pair or compute a fresh one
   useEffect(() => {
-    if (!loading) getNextPair();
+    if (!isLoading) {
+      let result: [BabyName, BabyName] | null = null;
+      if (savedPairIds) {
+        const [id1, id2] = savedPairIds;
+        const name1 = namesRef.current.find((n) => n.id === id1);
+        const name2 = namesRef.current.find((n) => n.id === id2);
+        const key = [id1, id2].sort().join('|');
+        if (name1 && name2 && !votedPairsRef.current.has(key)) {
+          result = [name1, name2];
+        }
+      }
+      if (!result) result = computeNextPair();
+      showNewPair(result, false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [isLoading]);
 
-  async function handleVote(winner: BabyName, loser: BabyName) {
+  function handleVote(winner: BabyName, loser: BabyName) {
     if (picked) return;
     setPicked(winner.id);
-    // Optimistically mark this pair as voted so getNextPair won't reuse it
     const key = [winner.id, loser.id].sort().join('|');
     votedPairsRef.current = new Set([...votedPairsRef.current, key]);
-    await vote(winner, loser);
-    setTimeout(() => getNextPairRef.current(), 800);
+
+    // Optimistic: show ❤️ briefly then slide to next pair — don't wait for Firestore
+    setTimeout(transitionToNext, 450);
+
+    vote(winner, loser).catch(() => {
+      // Rollback: pair becomes available again in future rounds
+      votedPairsRef.current = new Set([...votedPairsRef.current].filter((k) => k !== key));
+      notifications.show({
+        color: 'red',
+        title: 'Error al votar',
+        message: 'No se pudo guardar el voto. El duelo volvió a la lista.',
+      });
+    });
   }
 
   const femaleCount = names.filter((n) => n.gender === 'female').length;
   const maleCount = names.filter((n) => n.gender === 'male').length;
   const hasEnoughNames = femaleCount >= 2 || maleCount >= 2;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Center h={300}>
         <Loader color="pink" />
@@ -206,7 +269,7 @@ export function VotePage({ onGoToNames }: Props) {
       </Title>
 
       {pair && (
-        <SimpleGrid cols={2} spacing="lg">
+        <SimpleGrid cols={2} spacing="lg" style={pairStyle}>
           {pair.map((name, idx) => {
             const opponent = pair[idx === 0 ? 1 : 0];
             const isWinner = picked === name.id;
@@ -243,7 +306,6 @@ export function VotePage({ onGoToNames }: Props) {
                         ❤️
                       </Text>
                     )}
-                    {voteLoading && isWinner && <Loader size="xs" color={color} />}
                   </Stack>
                 </Center>
               </Paper>
@@ -258,7 +320,7 @@ export function VotePage({ onGoToNames }: Props) {
           color="gray"
           size="xs"
           radius="xl"
-          onClick={getNextPair}
+          onClick={transitionToNext}
           disabled={!!picked}
         >
           Saltar este duelo

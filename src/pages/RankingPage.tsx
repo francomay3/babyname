@@ -59,7 +59,7 @@ export function RankingPage() {
       </Group>
 
       <Tabs value={gender} onChange={(v) => setGender(v as Gender)}>
-        <Tabs.List>
+        <Tabs.List grow>
           <Tabs.Tab value="female" color="pink">
             👧 Nenas
           </Tabs.Tab>

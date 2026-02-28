@@ -15,6 +15,7 @@ npm run preview   # preview production build
 
 - **Vite + React 19 + TypeScript** (`verbatimModuleSyntax` is on — always use `import type` for type-only imports)
 - **Mantine v8** for UI — use Mantine components throughout, avoid custom CSS
+- **`@mantine/hooks`** — use `useLocalStorage` for persistent state (survives refresh)
 - **Firebase 12**: Auth (Google Sign-In) + Firestore (no backend functions)
 
 ## Architecture
@@ -54,6 +55,25 @@ src/
 
 `firestore.rules` — enforces that users can only write their own scores/matches.
 `firestore.indexes.json` — composite indexes for gender+addedAt, userId+gender, gender+eloScore queries.
+
+## Patterns
+
+### Persistent state
+Use `useLocalStorage` from `@mantine/hooks`. Current keys:
+- `babyname-tab` — active main tab (`'add' | 'vote' | 'ranking'`)
+- `babyname-current-pair` — current duel pair IDs `[id1, id2] | null`
+
+### Optimistic updates
+Fire-and-forget pattern: update local state immediately, call Firestore in background, rollback on `.catch()`. Show error via `notifications.show({ color: 'red', ... })` from `@mantine/notifications`.
+
+### Animations
+Use inline CSS `transform + opacity + transition` (not Mantine's `<Transition>` component). Double `requestAnimationFrame` ensures the browser commits the "reset" position before the enter animation starts:
+```tsx
+setPairStyle({ opacity: 0, transform: 'translateX(32px)', transition: 'none' });
+requestAnimationFrame(() => requestAnimationFrame(() =>
+  setPairStyle({ opacity: 1, transform: 'translateX(0)', transition: 'opacity 0.2s ease, transform 0.2s ease' })
+));
+```
 
 ## Firebase Project
 
