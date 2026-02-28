@@ -8,19 +8,23 @@ import {
   Avatar,
   Menu,
   UnstyledButton,
-  Button,
-  Container,
+  ActionIcon,
   Loader,
   Center,
+  Drawer,
+  Box,
+  Flex,
 } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
-import { IconLogout, IconChevronDown } from '@tabler/icons-react';
+import { IconLogout, IconChevronDown, IconSettings } from '@tabler/icons-react';
 import { useAuth } from './hooks/useAuth';
 import { useLocale } from './context/LocaleContext';
+import { useAdmin } from './hooks/useAdmin';
 import { LoginPage } from './pages/LoginPage';
 import { AddNamesPage } from './pages/AddNamesPage';
 import { VotePage } from './pages/VotePage';
 import { RankingPage } from './pages/RankingPage';
+import { AdminPage } from './pages/AdminPage';
 
 type Tab = 'add' | 'vote' | 'ranking';
 
@@ -29,6 +33,8 @@ const TAB_ORDER: Record<Tab, number> = { add: 0, vote: 1, ranking: 2 };
 export default function App() {
   const { user, loading, logOut } = useAuth();
   const { t, toggleLocale } = useLocale();
+  const { isAdmin } = useAdmin();
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const [tab, setTab] = useLocalStorage<Tab>({ key: 'babyname-tab', defaultValue: 'vote' });
   // displayTab lags behind tab during the transition so content swaps mid-flight.
@@ -95,18 +101,24 @@ export default function App() {
   }
 
   return (
+    <>
     <AppShell header={{ height: 60 }} padding="md">
-      <AppShell.Header px="md">
+      <AppShell.Header px={{ base: 'xs', sm: 'md' }}>
         <Group h="100%" justify="space-between">
           <UnstyledButton onClick={() => handleTabChange('add')}>
-            <Text fw={700} fz="lg" c="pink.6">
-              👶 BabyName
-            </Text>
+            <Text fw={700} fz="lg" c="pink.6" visibleFrom="sm">{t.appTitle}</Text>
+            <Text fw={700} fz="xl" c="pink.6" hiddenFrom="sm">👶</Text>
           </UnstyledButton>
           <Group gap="xs" align="center">
-            <Button variant="subtle" color="gray" size="xs" radius="xl" onClick={toggleLocale}>
-              {t.langToggleLabel}
-            </Button>
+            {isAdmin && (
+              <ActionIcon variant="subtle" color="gray" size="sm" onClick={() => setAdminOpen(true)}>
+                <IconSettings size={18} />
+              </ActionIcon>
+            )}
+            <UnstyledButton onClick={toggleLocale}>
+              <Text fz="sm" c="gray.7" visibleFrom="sm">{t.langToggleLabel}</Text>
+              <Text style={{ fontSize: 20, lineHeight: 1 }} hiddenFrom="sm">{t.langToggleLabelMobile}</Text>
+            </UnstyledButton>
             <Menu shadow="md" radius="lg" position="bottom-end">
               <Menu.Target>
                 <UnstyledButton>
@@ -139,12 +151,20 @@ export default function App() {
       </AppShell.Header>
 
       <AppShell.Main>
-        <Container size="sm" pb="xl">
-          <Tabs value={tab} onChange={(v) => handleTabChange(v as Tab)} mb="xl" color="pink">
-            <Tabs.List grow>
-              <Tabs.Tab value="add">{t.tabNames}</Tabs.Tab>
-              <Tabs.Tab value="vote">{t.tabVote}</Tabs.Tab>
-              <Tabs.Tab value="ranking">{t.tabRanking}</Tabs.Tab>
+        <Flex justify="center">
+
+        <Box maw="700" w="100%">
+          <Tabs
+            value={tab}
+            onChange={(v) => handleTabChange(v as Tab)}
+            color="pink"
+            mb="xl"
+            styles={{ tab: { paddingLeft: 8, paddingRight: 8 } }}
+          >
+            <Tabs.List grow style={{ flexWrap: 'nowrap' }}>
+              <Tabs.Tab value="add" style={{ whiteSpace: 'nowrap' }}>{t.tabNames}</Tabs.Tab>
+              <Tabs.Tab value="vote" style={{ whiteSpace: 'nowrap' }}>{t.tabVote}</Tabs.Tab>
+              <Tabs.Tab value="ranking" style={{ whiteSpace: 'nowrap' }}>{t.tabRanking}</Tabs.Tab>
             </Tabs.List>
           </Tabs>
 
@@ -153,8 +173,20 @@ export default function App() {
             {displayTab === 'vote' && <VotePage onGoToNames={() => handleTabChange('add')} />}
             {displayTab === 'ranking' && <RankingPage />}
           </div>
-        </Container>
+        </Box>
+        </Flex>
       </AppShell.Main>
     </AppShell>
+
+    <Drawer
+      opened={adminOpen}
+      onClose={() => setAdminOpen(false)}
+      title={t.adminDrawerTitle}
+      position="right"
+      size="lg"
+    >
+      <AdminPage />
+    </Drawer>
+    </>
   );
 }

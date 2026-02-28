@@ -8,8 +8,12 @@ export type Locale = 'es' | 'en';
 export interface Strings {
   // ── Header ──────────────────────────────────────────────────────────────────
   logout: string;
-  /** Full label on the lang-toggle button (flag + text, switches TO this language) */
+  /** Full label on the lang-toggle button — desktop (flag + text) */
   langToggleLabel: string;
+  /** Flag-only label for mobile */
+  langToggleLabelMobile: string;
+  /** App title shown in the header — desktop */
+  appTitle: string;
 
   // ── Main tabs ───────────────────────────────────────────────────────────────
   tabNames: string;
@@ -66,6 +70,29 @@ export interface Strings {
   rankingColBreakdown: string;
   rankingNoVotesFemale: string;
   rankingNoVotesMale: string;
+
+  // ── Admin panel ──────────────────────────────────────────────────────────────
+  adminDrawerTitle: string;
+  adminSectionUsers: string;
+  adminSectionAdmins: string;
+  adminSectionDanger: string;
+  adminNamesCount: (n: number) => string;
+  adminVotesCount: (n: number) => string;
+  adminDeleteVotes: string;
+  adminDeleteUser: string;
+  adminAddAdmin: string;
+  adminRemoveAdmin: string;
+  adminResetDb: string;
+  adminResetConfirmPrompt: string;
+  adminResetConfirmWord: string;
+  adminResetSuccess: string;
+  adminConfirmTitle: string;
+  adminCancel: string;
+  adminConfirm: string;
+  adminYouLabel: string;
+  adminDeleteVotesSuccess: string;
+  adminDeleteUserSuccess: string;
+  adminErrorMsg: string;
 }
 
 export const locales: Record<Locale, Strings> = {
@@ -73,6 +100,8 @@ export const locales: Record<Locale, Strings> = {
   es: {
     logout: 'Cerrar sesión',
     langToggleLabel: '🇺🇸 Switch to English',
+    langToggleLabelMobile: '🇺🇸',
+    appTitle: '👶 BabyName',
 
     tabNames: '✨ Nombres',
     tabVote: '⚔️ Votar',
@@ -111,20 +140,44 @@ export const locales: Record<Locale, Strings> = {
     voteErrorMsg: 'No se pudo guardar el voto. El duelo volvió a la lista.',
 
     rankingTitle: '🏆 Ranking',
-    rankingCombined: '👥 Combinado',
-    rankingMine: '👤 El mío',
+    rankingCombined: 'Combinado',
+    rankingMine: 'El mío',
     rankingColName: 'Nombre',
     rankingColElo: 'ELO',
     rankingColWL: 'W / L',
     rankingColBreakdown: 'Desglose',
     rankingNoVotesFemale: 'Todavía no hay votos para nenas. ¡Empezá a votar!',
     rankingNoVotesMale: 'Todavía no hay votos para nenes. ¡Empezá a votar!',
+
+    adminDrawerTitle: '⚙️ Admin',
+    adminSectionUsers: 'Usuarios',
+    adminSectionAdmins: 'Administradores',
+    adminSectionDanger: 'Zona de peligro',
+    adminNamesCount: (n) => `${n} nombres`,
+    adminVotesCount: (n) => `${n} votos`,
+    adminDeleteVotes: 'Borrar votos',
+    adminDeleteUser: 'Borrar usuario',
+    adminAddAdmin: 'Dar admin',
+    adminRemoveAdmin: 'Quitar admin',
+    adminResetDb: 'Resetear base de datos',
+    adminResetConfirmPrompt: 'Escribí RESET para confirmar. Esta acción no se puede deshacer.',
+    adminResetConfirmWord: 'RESET',
+    adminResetSuccess: '¡Base de datos reseteada!',
+    adminConfirmTitle: '¿Estás seguro?',
+    adminCancel: 'Cancelar',
+    adminConfirm: 'Confirmar',
+    adminYouLabel: 'tú',
+    adminDeleteVotesSuccess: 'Votos borrados.',
+    adminDeleteUserSuccess: 'Usuario borrado.',
+    adminErrorMsg: 'Ocurrió un error. Intentá de nuevo.',
   },
 
   // ── English ───────────────────────────────────────────────────────────────────
   en: {
     logout: 'Sign out',
     langToggleLabel: '🇦🇷 Cambiar a español',
+    langToggleLabelMobile: '🇦🇷',
+    appTitle: '👶 BabyName',
 
     tabNames: '✨ Names',
     tabVote: '⚔️ Vote',
@@ -163,13 +216,35 @@ export const locales: Record<Locale, Strings> = {
     voteErrorMsg: 'Could not save the vote. The duel is back in the queue.',
 
     rankingTitle: '🏆 Ranking',
-    rankingCombined: '👥 Combined',
-    rankingMine: '👤 Mine',
+    rankingCombined: 'Combined',
+    rankingMine: 'Mine',
     rankingColName: 'Name',
     rankingColElo: 'ELO',
     rankingColWL: 'W / L',
     rankingColBreakdown: 'Breakdown',
     rankingNoVotesFemale: 'No votes yet for girls. Start voting!',
     rankingNoVotesMale: 'No votes yet for boys. Start voting!',
+
+    adminDrawerTitle: '⚙️ Admin',
+    adminSectionUsers: 'Users',
+    adminSectionAdmins: 'Admins',
+    adminSectionDanger: 'Danger Zone',
+    adminNamesCount: (n) => `${n} names`,
+    adminVotesCount: (n) => `${n} votes`,
+    adminDeleteVotes: 'Reset votes',
+    adminDeleteUser: 'Delete user',
+    adminAddAdmin: 'Grant admin',
+    adminRemoveAdmin: 'Remove admin',
+    adminResetDb: 'Reset database',
+    adminResetConfirmPrompt: 'Type RESET to confirm. This action cannot be undone.',
+    adminResetConfirmWord: 'RESET',
+    adminResetSuccess: 'Database reset!',
+    adminConfirmTitle: 'Are you sure?',
+    adminCancel: 'Cancel',
+    adminConfirm: 'Confirm',
+    adminYouLabel: 'you',
+    adminDeleteVotesSuccess: 'Votes deleted.',
+    adminDeleteUserSuccess: 'User deleted.',
+    adminErrorMsg: 'An error occurred. Please try again.',
   },
 };

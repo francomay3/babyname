@@ -26,3 +26,7 @@ export interface RankedName extends BabyName {
   matches: number;
   allScores?: { userId: string; displayName: string; eloScore: number }[];
 }
+
+export interface AdminConfig {
+  uids: string[];
+}

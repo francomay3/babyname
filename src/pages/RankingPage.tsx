@@ -40,8 +40,7 @@ export function RankingPage() {
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="center">
-        <Title order={3}>{t.rankingTitle}</Title>
+      <Group justify="flex-end">
         <SegmentedControl
           value={view}
           onChange={(v) => setView(v as 'mine' | 'combined')}
@@ -113,14 +112,14 @@ function GenderSection({
         </Center>
       ) : (
         <Paper shadow="sm" radius="lg" withBorder>
-          <Table striped highlightOnHover>
+          <Table striped highlightOnHover horizontalSpacing="xs" verticalSpacing="xs">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>#</Table.Th>
                 <Table.Th>{t.rankingColName}</Table.Th>
                 <Table.Th ta="right">{t.rankingColElo}</Table.Th>
-                <Table.Th ta="right">{t.rankingColWL}</Table.Th>
-                {view === 'combined' && <Table.Th ta="right">{t.rankingColBreakdown}</Table.Th>}
+                <Table.Th ta="right" visibleFrom="sm">{t.rankingColWL}</Table.Th>
+                {view === 'combined' && <Table.Th ta="right" visibleFrom="sm">{t.rankingColBreakdown}</Table.Th>}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -176,13 +175,13 @@ function RankingRow({
           </Text>
         )}
       </Table.Td>
-      <Table.Td ta="right">
+      <Table.Td ta="right" visibleFrom="sm">
         <Text fz="sm" c="dimmed">
           {hasData ? `${name.wins} / ${name.losses}` : '—'}
         </Text>
       </Table.Td>
       {showBreakdown && (
-        <Table.Td ta="right">
+        <Table.Td ta="right" visibleFrom="sm">
           <Group justify="flex-end" gap={4}>
             {name.allScores?.map((s) => (
               <Tooltip key={s.userId} label={`${s.displayName}: ${s.eloScore}`} position="top">

@@ -2,34 +2,50 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/config/admins)
+        && request.auth.uid in get(/databases/$(database)/documents/config/admins).data.uids;
+    }
+
+    // Admin config: any auth user can read; admins or bootstrap (doc doesn't exist) can write
+    match /config/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin()
+                   || !exists(/databases/$(database)/documents/config/admins);
+    }
+
     // Any authenticated user can read all names
     match /names/{nameId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
                     && request.resource.data.addedBy == request.auth.uid;
-      allow delete: if request.auth != null
-                    && resource.data.addedBy == request.auth.uid;
+      allow delete: if (request.auth != null && resource.data.addedBy == request.auth.uid)
+                    || isAdmin();
     }
 
     // Each user can read all scores (needed for combined ranking)
-    // but can only write their own
+    // but can only write their own; admins can delete any
     match /userScores/{scoreId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.resource.data.userId == request.auth.uid;
+      allow create, update: if (request.auth != null
+                               && request.resource.data.userId == request.auth.uid)
+                            || isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Match records: authenticated users can create and read
+    // Match records: authenticated users can create and read; admins can delete
     match /matches/{matchId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
     }
 
-    // Users collection: each user can read all, write only their own
+    // Users collection: each user can read all, write only their own; admins can write any
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
     }
   }
 }
