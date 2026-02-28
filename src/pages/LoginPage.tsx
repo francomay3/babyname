@@ -1,9 +1,11 @@
 import { Button, Center, Stack, Text, Title, Paper } from '@mantine/core';
 import { IconBrandGoogle } from '@tabler/icons-react';
 import { useAuth } from '../hooks/useAuth';
+import { useLocale } from '../context/LocaleContext';
 
 export function LoginPage() {
   const { signIn } = useAuth();
+  const { t } = useLocale();
 
   return (
     <Center h="100vh" bg="pink.0">
@@ -16,8 +18,7 @@ export function LoginPage() {
             BabyName
           </Title>
           <Text c="dimmed" ta="center" fz="sm">
-            Elegí el nombre perfecto para tu bebé jugando a duelos entre nombres.
-            ¡El ganador se gana el corazón de la familia!
+            {t.loginSubtitle}
           </Text>
           <Button
             leftSection={<IconBrandGoogle size={18} />}
@@ -28,7 +29,7 @@ export function LoginPage() {
             fullWidth
             onClick={signIn}
           >
-            Entrar con Google
+            {t.loginButton}
           </Button>
         </Stack>
       </Paper>

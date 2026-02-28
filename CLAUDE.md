@@ -56,6 +56,14 @@ src/
 `firestore.rules` — enforces that users can only write their own scores/matches.
 `firestore.indexes.json` — composite indexes for gender+addedAt, userId+gender, gender+eloScore queries.
 
+## Internationalization (i18n)
+
+All user-facing strings live in **`src/locales.ts`** — edit there to update copy in ES/EN.
+- `LocaleContext` (`src/context/LocaleContext.tsx`) provides `{ t, locale, toggleLocale }` via React Context
+- Every component uses `const { t } = useLocale()` — do NOT hardcode strings in components
+- Language stored in `localStorage` key `babyname-locale` (default: `'es'`)
+- To add a new string: add the key+type to the `Strings` interface, then add the value in both `es` and `en` locales
+
 ## Patterns
 
 ### Persistent state

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Stack,
-  Tabs,
   Table,
   Text,
   Badge,
@@ -15,21 +14,20 @@ import {
   Paper,
 } from '@mantine/core';
 import { useRanking } from '../hooks/useRanking';
-import type { RankedName, Gender } from '../types';
+import { useLocale } from '../context/LocaleContext';
+import type { RankedName } from '../types';
 import { useAuth } from '../hooks/useAuth';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 export function RankingPage() {
-  const [gender, setGender] = useState<Gender>('female');
   const [view, setView] = useState<'mine' | 'combined'>('combined');
-  const { myRanking, combinedRanking, loading } = useRanking(gender);
+  const { myRanking: femaleMyRanking, combinedRanking: femaleCombinedRanking, loading: femaleLoading } = useRanking('female');
+  const { myRanking: maleMyRanking, combinedRanking: maleCombinedRanking, loading: maleLoading } = useRanking('male');
   const { user } = useAuth();
+  const { t } = useLocale();
 
-  const ranking = view === 'mine' ? myRanking : combinedRanking;
-  const genderColor = gender === 'female' ? 'pink' : 'blue';
-
-  if (loading) {
+  if (femaleLoading || maleLoading) {
     return (
       <Center h={300}>
         <Loader color="pink" />
@@ -37,45 +35,79 @@ export function RankingPage() {
     );
   }
 
-  const hasVotes = ranking.some((n) => n.matches > 0);
+  const femaleRanking = view === 'mine' ? femaleMyRanking : femaleCombinedRanking;
+  const maleRanking = view === 'mine' ? maleMyRanking : maleCombinedRanking;
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="flex-end">
-        <Title order={3} c={`${genderColor}.6`}>
-          🏆 Ranking
-        </Title>
+      <Group justify="space-between" align="center">
+        <Title order={3}>{t.rankingTitle}</Title>
         <SegmentedControl
           value={view}
           onChange={(v) => setView(v as 'mine' | 'combined')}
           data={[
-            { label: '👥 Combinado', value: 'combined' },
-            { label: '👤 El mío', value: 'mine' },
+            { label: t.rankingCombined, value: 'combined' },
+            { label: t.rankingMine, value: 'mine' },
           ]}
-          color={genderColor}
+          color="pink"
           radius="xl"
           size="xs"
         />
       </Group>
 
-      <Tabs value={gender} onChange={(v) => setGender(v as Gender)}>
-        <Tabs.List grow>
-          <Tabs.Tab value="female" color="pink">
-            👧 Nenas
-          </Tabs.Tab>
-          <Tabs.Tab value="male" color="blue">
-            👦 Nenes
-          </Tabs.Tab>
-        </Tabs.List>
-      </Tabs>
+      <GenderSection
+        title={`👧 ${t.femalePluralLabel}`}
+        color="pink"
+        ranking={femaleRanking}
+        view={view}
+        currentUserId={user?.uid}
+        noVotesMsg={t.rankingNoVotesFemale}
+        t={t}
+      />
 
+      <GenderSection
+        title={`👦 ${t.malePluralLabel}`}
+        color="blue"
+        ranking={maleRanking}
+        view={view}
+        currentUserId={user?.uid}
+        noVotesMsg={t.rankingNoVotesMale}
+        t={t}
+      />
+    </Stack>
+  );
+}
+
+function GenderSection({
+  title,
+  color,
+  ranking,
+  view,
+  currentUserId,
+  noVotesMsg,
+  t,
+}: {
+  title: string;
+  color: string;
+  ranking: RankedName[];
+  view: 'mine' | 'combined';
+  currentUserId?: string;
+  noVotesMsg: string;
+  t: ReturnType<typeof useLocale>['t'];
+}) {
+  const hasVotes = ranking.some((n) => n.matches > 0);
+
+  return (
+    <Stack gap="sm">
+      <Title order={4} c={`${color}.6`}>
+        {title}
+      </Title>
       {!hasVotes ? (
-        <Center h={200}>
-          <Stack align="center" gap="sm">
-            <Text fz={40}>🗳️</Text>
-            <Text c="dimmed" ta="center">
-              Todavía no hay votos para{' '}
-              {gender === 'female' ? 'nenas' : 'nenes'}. ¡Empezá a votar!
+        <Center h={100}>
+          <Stack align="center" gap="xs">
+            <Text fz={32}>🗳️</Text>
+            <Text c="dimmed" ta="center" fz="sm">
+              {noVotesMsg}
             </Text>
           </Stack>
         </Center>
@@ -85,10 +117,10 @@ export function RankingPage() {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>#</Table.Th>
-                <Table.Th>Nombre</Table.Th>
-                <Table.Th ta="right">ELO</Table.Th>
-                <Table.Th ta="right">W / L</Table.Th>
-                {view === 'combined' && <Table.Th ta="right">Desglose</Table.Th>}
+                <Table.Th>{t.rankingColName}</Table.Th>
+                <Table.Th ta="right">{t.rankingColElo}</Table.Th>
+                <Table.Th ta="right">{t.rankingColWL}</Table.Th>
+                {view === 'combined' && <Table.Th ta="right">{t.rankingColBreakdown}</Table.Th>}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -98,7 +130,7 @@ export function RankingPage() {
                   name={name}
                   position={idx + 1}
                   showBreakdown={view === 'combined'}
-                  currentUserId={user?.uid}
+                  currentUserId={currentUserId}
                 />
               ))}
             </Table.Tbody>
@@ -135,11 +167,7 @@ function RankingRow({
       </Table.Td>
       <Table.Td ta="right">
         {hasData ? (
-          <Badge
-            variant="filled"
-            color={name.eloScore >= 1000 ? 'teal' : 'red'}
-            radius="xl"
-          >
+          <Badge variant="filled" color={name.eloScore >= 1000 ? 'teal' : 'red'} radius="xl">
             {name.eloScore}
           </Badge>
         ) : (
@@ -157,11 +185,7 @@ function RankingRow({
         <Table.Td ta="right">
           <Group justify="flex-end" gap={4}>
             {name.allScores?.map((s) => (
-              <Tooltip
-                key={s.userId}
-                label={`${s.displayName}: ${s.eloScore}`}
-                position="top"
-              >
+              <Tooltip key={s.userId} label={`${s.displayName}: ${s.eloScore}`} position="top">
                 <Avatar
                   size="sm"
                   radius="xl"

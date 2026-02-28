@@ -8,6 +8,7 @@ import {
   Avatar,
   Menu,
   UnstyledButton,
+  Button,
   Container,
   Loader,
   Center,
@@ -15,6 +16,7 @@ import {
 import { useLocalStorage } from '@mantine/hooks';
 import { IconLogout, IconChevronDown } from '@tabler/icons-react';
 import { useAuth } from './hooks/useAuth';
+import { useLocale } from './context/LocaleContext';
 import { LoginPage } from './pages/LoginPage';
 import { AddNamesPage } from './pages/AddNamesPage';
 import { VotePage } from './pages/VotePage';
@@ -26,6 +28,7 @@ const TAB_ORDER: Record<Tab, number> = { add: 0, vote: 1, ranking: 2 };
 
 export default function App() {
   const { user, loading, logOut } = useAuth();
+  const { t, toggleLocale } = useLocale();
 
   const [tab, setTab] = useLocalStorage<Tab>({ key: 'babyname-tab', defaultValue: 'vote' });
   // displayTab lags behind tab during the transition so content swaps mid-flight.
@@ -53,7 +56,6 @@ export default function App() {
 
     if (transitionRef.current) clearTimeout(transitionRef.current);
 
-    // Exit: slide out opposite to travel direction
     setContentStyle({
       opacity: 0,
       transform: `translateX(${dir * -24}px)`,
@@ -63,13 +65,11 @@ export default function App() {
 
     transitionRef.current = setTimeout(() => {
       setDisplayTab(newTab);
-      // Reset to enter position with no transition (browser won't animate the jump)
       setContentStyle({
         opacity: 0,
         transform: `translateX(${dir * 24}px)`,
         transition: 'none',
       });
-      // Two rAF frames ensure the browser commits the reset before animating in
       requestAnimationFrame(() =>
         requestAnimationFrame(() =>
           setContentStyle({
@@ -98,42 +98,53 @@ export default function App() {
     <AppShell header={{ height: 60 }} padding="md">
       <AppShell.Header px="md">
         <Group h="100%" justify="space-between">
-          <Text fw={700} fz="lg" c="pink.6">
-            👶 BabyName
-          </Text>
-          <Menu shadow="md" radius="lg" position="bottom-end">
-            <Menu.Target>
-              <UnstyledButton>
-                <Group gap={4} align="center" wrap="nowrap">
-                  <Avatar src={user.photoURL} size="sm" radius="xl" alt={user.displayName ?? ''}>
-                    {user.displayName?.[0]}
-                  </Avatar>
-                  <IconChevronDown size={14} color="gray" />
-                </Group>
-              </UnstyledButton>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Label>{user.displayName}</Menu.Label>
-              <Menu.Item
-                leftSection={<IconLogout size={14} />}
-                color="red"
-                onClick={logOut}
-              >
-                Cerrar sesión
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          <UnstyledButton onClick={() => handleTabChange('add')}>
+            <Text fw={700} fz="lg" c="pink.6">
+              👶 BabyName
+            </Text>
+          </UnstyledButton>
+          <Group gap="xs" align="center">
+            <Button variant="subtle" color="gray" size="xs" radius="xl" onClick={toggleLocale}>
+              {t.langToggleLabel}
+            </Button>
+            <Menu shadow="md" radius="lg" position="bottom-end">
+              <Menu.Target>
+                <UnstyledButton>
+                  <Group gap={4} align="center" wrap="nowrap">
+                    <Avatar
+                      src={user.photoURL}
+                      size="sm"
+                      radius="xl"
+                      alt={user.displayName ?? ''}
+                    >
+                      {user.displayName?.[0]}
+                    </Avatar>
+                    <IconChevronDown size={14} color="gray" />
+                  </Group>
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>{user.displayName}</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconLogout size={14} />}
+                  color="red"
+                  onClick={logOut}
+                >
+                  {t.logout}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
         </Group>
       </AppShell.Header>
 
       <AppShell.Main>
         <Container size="sm" pb="xl">
-          {/* tab indicator moves immediately; content follows with transition */}
           <Tabs value={tab} onChange={(v) => handleTabChange(v as Tab)} mb="xl" color="pink">
             <Tabs.List grow>
-              <Tabs.Tab value="add">✨ Nombres</Tabs.Tab>
-              <Tabs.Tab value="vote">⚔️ Votar</Tabs.Tab>
-              <Tabs.Tab value="ranking">🏆 Ranking</Tabs.Tab>
+              <Tabs.Tab value="add">{t.tabNames}</Tabs.Tab>
+              <Tabs.Tab value="vote">{t.tabVote}</Tabs.Tab>
+              <Tabs.Tab value="ranking">{t.tabRanking}</Tabs.Tab>
             </Tabs.List>
           </Tabs>
 

@@ -18,6 +18,7 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useVote } from '../hooks/useVote';
 import { useAuth } from '../hooks/useAuth';
+import { useLocale } from '../context/LocaleContext';
 import type { BabyName, UserScore } from '../types';
 
 interface Props {
@@ -62,6 +63,7 @@ function pickPair(
 export function VotePage({ onGoToNames }: Props) {
   const { user } = useAuth();
   const { vote } = useVote();
+  const { t } = useLocale();
 
   const [savedPairIds, setSavedPairIds] = useLocalStorage<[string, string] | null>({
     key: 'babyname-current-pair',
@@ -76,7 +78,6 @@ export function VotePage({ onGoToNames }: Props) {
   const [noPairsLeft, setNoPairsLeft] = useState(false);
   const [pairStyle, setPairStyle] = useState<CSSProperties>({});
 
-  // Refs so setTimeout callbacks always read the latest values
   const namesRef = useRef<BabyName[]>([]);
   const scoresRef = useRef<UserScore[]>([]);
   const votedPairsRef = useRef<Set<string>>(new Set());
@@ -134,7 +135,6 @@ export function VotePage({ onGoToNames }: Props) {
     return pickPair(namesRef.current, scoresRef.current, votedPairsRef.current);
   }
 
-  // Show a pair — with optional right-to-left slide-in animation
   function showNewPair(result: [BabyName, BabyName] | null, animate: boolean) {
     setPicked(null);
     if (result === null) {
@@ -149,7 +149,6 @@ export function VotePage({ onGoToNames }: Props) {
     setPair(result);
 
     if (animate) {
-      // Start off-screen to the right
       setPairStyle({ opacity: 0, transform: 'translateX(32px)', transition: 'none' });
       requestAnimationFrame(() =>
         requestAnimationFrame(() =>
@@ -201,16 +200,14 @@ export function VotePage({ onGoToNames }: Props) {
     const key = [winner.id, loser.id].sort().join('|');
     votedPairsRef.current = new Set([...votedPairsRef.current, key]);
 
-    // Optimistic: show ❤️ briefly then slide to next pair — don't wait for Firestore
     setTimeout(transitionToNext, 450);
 
     vote(winner, loser).catch(() => {
-      // Rollback: pair becomes available again in future rounds
       votedPairsRef.current = new Set([...votedPairsRef.current].filter((k) => k !== key));
       notifications.show({
         color: 'red',
-        title: 'Error al votar',
-        message: 'No se pudo guardar el voto. El duelo volvió a la lista.',
+        title: t.voteErrorTitle,
+        message: t.voteErrorMsg,
       });
     });
   }
@@ -233,10 +230,10 @@ export function VotePage({ onGoToNames }: Props) {
         <Stack align="center" gap="md">
           <Text fz={48}>😅</Text>
           <Title order={3} ta="center">
-            Necesitás al menos 2 nombres para votar.
+            {t.voteNotEnoughTitle}
           </Title>
           <Anchor component="button" onClick={onGoToNames} c="pink.6" fz="sm">
-            Agregá más nombres en la pestaña "Nombres" →
+            {t.voteNotEnoughLink}
           </Anchor>
         </Stack>
       </Center>
@@ -249,13 +246,13 @@ export function VotePage({ onGoToNames }: Props) {
         <Stack align="center" gap="md">
           <Text fz={48}>🎉</Text>
           <Title order={3} ta="center">
-            ¡Votaste todos los duelos posibles!
+            {t.voteAllDoneTitle}
           </Title>
           <Text c="dimmed" ta="center" fz="sm">
-            Cuando se agreguen nuevos nombres van a aparecer nuevos duelos.
+            {t.voteAllDoneSubtitle}
           </Text>
           <Anchor component="button" onClick={onGoToNames} c="pink.6" fz="sm">
-            Ir a agregar nombres →
+            {t.voteAllDoneLink}
           </Anchor>
         </Stack>
       </Center>
@@ -265,7 +262,7 @@ export function VotePage({ onGoToNames }: Props) {
   return (
     <Stack gap="xl">
       <Title order={3} ta="center">
-        ¿Cuál te gusta más?
+        {t.voteQuestion}
       </Title>
 
       {pair && (
@@ -275,6 +272,10 @@ export function VotePage({ onGoToNames }: Props) {
             const isWinner = picked === name.id;
             const isLoser = !!picked && picked !== name.id;
             const color = name.gender === 'female' ? 'pink' : 'blue';
+            const genderLabel =
+              name.gender === 'female'
+                ? `👧 ${t.femaleLabel}`
+                : `👦 ${t.maleLabel}`;
 
             return (
               <Paper
@@ -299,7 +300,7 @@ export function VotePage({ onGoToNames }: Props) {
                       {name.text}
                     </Text>
                     <Badge size="sm" color={color} variant="light" radius="xl">
-                      {name.gender === 'female' ? '👧 Nena' : '👦 Nene'}
+                      {genderLabel}
                     </Badge>
                     {isWinner && (
                       <Text fz={28} style={{ lineHeight: 1 }}>
@@ -323,7 +324,7 @@ export function VotePage({ onGoToNames }: Props) {
           onClick={transitionToNext}
           disabled={!!picked}
         >
-          Saltar este duelo
+          {t.voteSkip}
         </Button>
       </Center>
     </Stack>

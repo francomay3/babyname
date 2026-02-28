@@ -15,6 +15,7 @@ import {
 import { IconPlus } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useNames } from '../hooks/useNames';
+import { useLocale } from '../context/LocaleContext';
 import type { Gender } from '../types';
 
 interface PendingName {
@@ -24,9 +25,11 @@ interface PendingName {
 }
 
 export function AddNamesPage() {
+  const { t } = useLocale();
   const [text, setText] = useState('');
   const [gender, setGender] = useState<Gender>('female');
   const [pendingNames, setPendingNames] = useState<PendingName[]>([]);
+  const [recentNames, setRecentNames] = useState<Set<string>>(new Set());
   const { names: femaleNames } = useNames('female');
   const { names: maleNames, addName } = useNames('male');
 
@@ -43,6 +46,17 @@ export function AddNamesPage() {
     });
   }, [femaleNames, maleNames]);
 
+  function markRecent(name: string) {
+    setRecentNames((prev) => new Set([...prev, name]));
+    setTimeout(() => {
+      setRecentNames((prev) => {
+        const next = new Set(prev);
+        next.delete(name);
+        return next;
+      });
+    }, 1200);
+  }
+
   async function handleSubmit() {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -50,37 +64,41 @@ export function AddNamesPage() {
     const all = [...femaleNames, ...maleNames];
     const duplicate =
       all.find((n) => n.text.toLowerCase() === trimmed.toLowerCase() && n.gender === gender) ||
-      pendingNames.find((n) => n.text.toLowerCase() === trimmed.toLowerCase() && n.gender === gender);
+      pendingNames.find(
+        (n) => n.text.toLowerCase() === trimmed.toLowerCase() && n.gender === gender
+      );
 
     if (duplicate) {
       notifications.show({
         color: 'orange',
-        title: '¡Ya existe!',
-        message: `"${trimmed}" ya está en la lista de ${gender === 'female' ? 'nenas' : 'nenes'}.`,
+        title: t.addNotifDuplicateTitle,
+        message:
+          gender === 'female'
+            ? t.addNotifDuplicateFemaleMsg(trimmed)
+            : t.addNotifDuplicateMaleMsg(trimmed),
       });
       return;
     }
 
     const tempId = `opt_${Date.now()}`;
-
-    // Optimistic update — clear input and add to list immediately
     setPendingNames((prev) => [...prev, { id: tempId, text: trimmed, gender }]);
     setText('');
+    markRecent(trimmed);
 
     try {
       await addName(trimmed, gender);
-      notifications.show({
-        color: genderColor,
-        title: '¡Nombre agregado!',
-        message: `"${trimmed}" entró al ruedo 🎉`,
-      });
+      // No success toast — the animation in the list is enough feedback
     } catch {
-      // Rollback
       setPendingNames((prev) => prev.filter((n) => n.id !== tempId));
+      setRecentNames((prev) => {
+        const next = new Set(prev);
+        next.delete(trimmed);
+        return next;
+      });
       notifications.show({
         color: 'red',
-        title: 'Error',
-        message: 'No se pudo agregar el nombre. Intentá de nuevo.',
+        title: t.addNotifErrorTitle,
+        message: t.addNotifErrorMsg,
       });
     }
   }
@@ -99,21 +117,21 @@ export function AddNamesPage() {
       <Paper shadow="sm" radius="lg" p="lg" withBorder>
         <Stack gap="md">
           <Title order={3} c={`${genderColor}.6`}>
-            ✨ Sugerí un nombre
+            {t.addTitle}
           </Title>
           <SegmentedControl
             value={gender}
             onChange={(v) => setGender(v as Gender)}
             data={[
-              { label: '👧 Nena', value: 'female' },
-              { label: '👦 Nene', value: 'male' },
+              { label: `👧 ${t.femaleLabel}`, value: 'female' },
+              { label: `👦 ${t.maleLabel}`, value: 'male' },
             ]}
             color={genderColor}
             radius="xl"
           />
           <Group>
             <TextInput
-              placeholder="Escribe un nombre..."
+              placeholder={t.addPlaceholder}
               value={text}
               onChange={(e) => setText(e.currentTarget.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
@@ -126,15 +144,29 @@ export function AddNamesPage() {
               color={genderColor}
               radius="xl"
             >
-              Agregar
+              {t.addButton}
             </Button>
           </Group>
         </Stack>
       </Paper>
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
-        <NameList title="👧 Nenas" names={displayFemale} color="pink" />
-        <NameList title="👦 Nenes" names={displayMale} color="blue" />
+        <NameList
+          title={`👧 ${t.femalePluralLabel}`}
+          names={displayFemale}
+          color="pink"
+          countLabel={t.addNamesCount(displayFemale.length)}
+          emptyLabel={t.addEmptyState}
+          recentNames={recentNames}
+        />
+        <NameList
+          title={`👦 ${t.malePluralLabel}`}
+          names={displayMale}
+          color="blue"
+          countLabel={t.addNamesCount(displayMale.length)}
+          emptyLabel={t.addEmptyState}
+          recentNames={recentNames}
+        />
       </SimpleGrid>
     </Stack>
   );
@@ -144,10 +176,16 @@ function NameList({
   title,
   names,
   color,
+  countLabel,
+  emptyLabel,
+  recentNames,
 }: {
   title: string;
   names: string[];
   color: string;
+  countLabel: string;
+  emptyLabel: string;
+  recentNames: Set<string>;
 }) {
   return (
     <Paper shadow="sm" radius="lg" p="lg" withBorder>
@@ -155,24 +193,63 @@ function NameList({
         <Group justify="space-between">
           <Title order={4}>{title}</Title>
           <Badge color={color} variant="light" radius="xl">
-            {names.length} nombres
+            {countLabel}
           </Badge>
         </Group>
         <Divider />
         {names.length === 0 ? (
           <Text c="dimmed" fz="sm" ta="center" py="md">
-            Todavía no hay nombres. ¡Sé el primero!
+            {emptyLabel}
           </Text>
         ) : (
           <Stack gap={4}>
             {names.map((name) => (
-              <Text key={name} fz="sm" px="xs" py={4}>
-                {name}
-              </Text>
+              <NameItem key={name} name={name} color={color} isNew={recentNames.has(name)} />
             ))}
           </Stack>
         )}
       </Stack>
     </Paper>
+  );
+}
+
+function NameItem({
+  name,
+  color,
+  isNew,
+}: {
+  name: string;
+  color: string;
+  isNew: boolean;
+}) {
+  // Pre-existing items start fully visible (no animation).
+  // New items start hidden and slide in via double-rAF.
+  const [entered, setEntered] = useState(!isNew);
+
+  useEffect(() => {
+    if (!entered) {
+      requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Text
+      fz="sm"
+      px="xs"
+      py={4}
+      style={{
+        opacity: entered ? 1 : 0,
+        transform: entered ? 'translateX(0)' : 'translateX(-10px)',
+        // background-color transition is slow so it lingers visibly after isNew → false
+        backgroundColor:
+          isNew && entered ? `var(--mantine-color-${color}-1)` : 'transparent',
+        borderRadius: 6,
+        transition:
+          'opacity 0.2s ease, transform 0.2s ease, background-color 1s ease',
+      }}
+    >
+      {name}
+    </Text>
   );
 }
