@@ -15,13 +15,16 @@ import {
 } from '@mantine/core';
 import { useRanking } from '../hooks/useRanking';
 import { useLocale } from '../context/LocaleContext';
-import type { RankedName } from '../types';
+import { NameDetailModal } from '../components/NameDetailModal';
+import type { BabyName, RankedName } from '../types';
+import { capitalizeName } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
-export function RankingPage() {
+export function RankingPage({ onNavigateToUser }: { onNavigateToUser?: (uid: string) => void }) {
   const [view, setView] = useState<'mine' | 'combined'>('combined');
+  const [selectedName, setSelectedName] = useState<BabyName | null>(null);
   const { myRanking: femaleMyRanking, combinedRanking: femaleCombinedRanking, loading: femaleLoading } = useRanking('female');
   const { myRanking: maleMyRanking, combinedRanking: maleCombinedRanking, loading: maleLoading } = useRanking('male');
   const { user } = useAuth();
@@ -62,6 +65,7 @@ export function RankingPage() {
         currentUserId={user?.uid}
         noVotesMsg={t.rankingNoVotesFemale}
         t={t}
+        onNameClick={setSelectedName}
       />
 
       <GenderSection
@@ -72,7 +76,10 @@ export function RankingPage() {
         currentUserId={user?.uid}
         noVotesMsg={t.rankingNoVotesMale}
         t={t}
+        onNameClick={setSelectedName}
       />
+
+      <NameDetailModal name={selectedName} onClose={() => setSelectedName(null)} onNavigateToUser={onNavigateToUser} />
     </Stack>
   );
 }
@@ -85,6 +92,7 @@ function GenderSection({
   currentUserId,
   noVotesMsg,
   t,
+  onNameClick,
 }: {
   title: string;
   color: string;
@@ -93,6 +101,7 @@ function GenderSection({
   currentUserId?: string;
   noVotesMsg: string;
   t: ReturnType<typeof useLocale>['t'];
+  onNameClick: (name: BabyName) => void;
 }) {
   const hasVotes = ranking.some((n) => n.matches > 0);
 
@@ -118,8 +127,8 @@ function GenderSection({
                 <Table.Th>#</Table.Th>
                 <Table.Th>{t.rankingColName}</Table.Th>
                 <Table.Th ta="right">{t.rankingColElo}</Table.Th>
-                <Table.Th ta="right" visibleFrom="sm">{t.rankingColWL}</Table.Th>
-                {view === 'combined' && <Table.Th ta="right" visibleFrom="sm">{t.rankingColBreakdown}</Table.Th>}
+                <Table.Th ta="right" visibleFrom="xs">{t.rankingColWL}</Table.Th>
+                {view === 'combined' && <Table.Th ta="right" visibleFrom="xs">{t.rankingColBreakdown}</Table.Th>}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -130,6 +139,7 @@ function GenderSection({
                   position={idx + 1}
                   showBreakdown={view === 'combined'}
                   currentUserId={currentUserId}
+                  onNameClick={onNameClick}
                 />
               ))}
             </Table.Tbody>
@@ -145,24 +155,31 @@ function RankingRow({
   position,
   showBreakdown,
   currentUserId,
+  onNameClick,
 }: {
   name: RankedName;
   position: number;
   showBreakdown: boolean;
   currentUserId?: string;
+  onNameClick: (name: BabyName) => void;
 }) {
   const medal = MEDALS[position - 1];
   const hasData = name.matches > 0;
 
   return (
-    <Table.Tr style={{ opacity: hasData ? 1 : 0.5 }}>
+    <Table.Tr
+      style={{ opacity: hasData ? 1 : 0.5, cursor: 'pointer' }}
+      onClick={() => onNameClick(name)}
+    >
       <Table.Td>
         <Text fw={700} c="dimmed" fz="sm">
           {medal ?? position}
         </Text>
       </Table.Td>
       <Table.Td>
-        <Text fw={position <= 3 ? 700 : 400}>{name.text}</Text>
+        <Text fw={position <= 3 ? 700 : 400}>
+          {capitalizeName(name.text)}
+        </Text>
       </Table.Td>
       <Table.Td ta="right">
         {hasData ? (
@@ -175,13 +192,13 @@ function RankingRow({
           </Text>
         )}
       </Table.Td>
-      <Table.Td ta="right" visibleFrom="sm">
+      <Table.Td ta="right" visibleFrom="xs">
         <Text fz="sm" c="dimmed">
           {hasData ? `${name.wins} / ${name.losses}` : '—'}
         </Text>
       </Table.Td>
       {showBreakdown && (
-        <Table.Td ta="right" visibleFrom="sm">
+        <Table.Td ta="right" visibleFrom="xs">
           <Group justify="flex-end" gap={4}>
             {name.allScores?.map((s) => (
               <Tooltip key={s.userId} label={`${s.displayName}: ${s.eloScore}`} position="top">

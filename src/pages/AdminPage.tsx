@@ -16,6 +16,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import {
   IconAlertTriangle,
+  IconExternalLink,
   IconTrash,
   IconUserOff,
   IconUserPlus,
@@ -27,7 +28,7 @@ import { useAuth } from '../hooks/useAuth';
 
 type ConfirmAction = { action: 'resetVotes' | 'deleteUser'; uid: string; name: string };
 
-export function AdminPage() {
+export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string) => void }) {
   const { t } = useLocale();
   const { user } = useAuth();
   const { adminUids, allUsersWithStats, resetUserVotes, deleteUser, resetDatabase, addAdmin, removeAdmin } =
@@ -114,6 +115,15 @@ export function AdminPage() {
                       </div>
                     </Group>
                     <Group gap="xs" wrap="nowrap">
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        size="sm"
+                        title="Ver perfil"
+                        onClick={() => onNavigateToUser(u.uid)}
+                      >
+                        <IconExternalLink size={14} />
+                      </ActionIcon>
                       <ActionIcon
                         variant="light"
                         color="orange"

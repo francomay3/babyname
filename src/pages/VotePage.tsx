@@ -20,6 +20,7 @@ import { useVote } from '../hooks/useVote';
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../context/LocaleContext';
 import type { BabyName, UserScore } from '../types';
+import { capitalizeName } from '../lib/utils';
 
 interface Props {
   onGoToNames: () => void;
@@ -290,14 +291,16 @@ export function VotePage({ onGoToNames }: Props) {
                   transition: 'all 0.2s ease',
                   transform: isWinner ? 'scale(1.04)' : isLoser ? 'scale(0.97)' : undefined,
                   opacity: isLoser ? 0.45 : 1,
-                  borderColor: isWinner ? `var(--mantine-color-${color}-5)` : undefined,
+                  borderColor: isWinner
+                    ? `var(--mantine-color-${color}-5)`
+                    : `var(--mantine-color-${color}-3)`,
                   background: isWinner ? `var(--mantine-color-${color}-0)` : undefined,
                 }}
               >
                 <Center h={120}>
                   <Stack align="center" gap="sm">
-                    <Text fz={36} fw={700} c={isWinner ? `${color}.6` : 'dark'} ta="center">
-                      {name.text}
+                    <Text fz={26} fw={700} c={isWinner ? `${color}.6` : 'dark'} ta="center">
+                      {capitalizeName(name.text)}
                     </Text>
                     <Badge size="sm" color={color} variant="light" radius="xl">
                       {genderLabel}

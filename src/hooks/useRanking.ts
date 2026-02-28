@@ -102,6 +102,7 @@ export function useRanking(gender: Gender) {
   return {
     myRanking: buildRanking(user?.uid),
     combinedRanking: buildRanking(),
+    buildRanking,
     loading,
   };
 }

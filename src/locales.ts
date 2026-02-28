@@ -71,6 +71,34 @@ export interface Strings {
   rankingNoVotesFemale: string;
   rankingNoVotesMale: string;
 
+  // ── Name detail modal ────────────────────────────────────────────────────────
+  nameModalProposedBy: string;
+  nameModalRanking: string;
+  nameModalNoVotes: string;
+  nameModalOf: (n: number) => string;
+
+  // ── Users tab ────────────────────────────────────────────────────────────────
+  tabUsers: string;
+  usersTitle: string;
+
+  // ── User profile page ────────────────────────────────────────────────────────
+  profileViewProfile: string;
+  profileBack: string;
+  profileRankingSection: string;
+  profileNamesSection: string;
+  profileVotesSection: string;
+  profileNoNames: string;
+  profileNoVotes: string;
+  profileDeleteName: string;
+
+  // ── Info modal ───────────────────────────────────────────────────────────────
+  infoTitle: string;
+  infoPurpose: string;
+  infoNotBinding: string;
+  infoLucia: string;
+  infoGender: string;
+  infoDueDate: string;
+
   // ── Admin panel ──────────────────────────────────────────────────────────────
   adminDrawerTitle: string;
   adminSectionUsers: string;
@@ -139,6 +167,22 @@ export const locales: Record<Locale, Strings> = {
     voteErrorTitle: 'Error al votar',
     voteErrorMsg: 'No se pudo guardar el voto. El duelo volvió a la lista.',
 
+    nameModalProposedBy: 'Propuesto por',
+    nameModalRanking: 'Ranking combinado',
+    nameModalNoVotes: 'Sin votos todavía',
+    nameModalOf: (n) => `de ${n} en total`,
+
+    tabUsers: '👥 Gente',
+    usersTitle: '👥 Usuarios',
+    profileViewProfile: 'Mi perfil',
+    profileBack: '← Volver',
+    profileRankingSection: '🏆 Ranking',
+    profileNamesSection: '✨ Nombres sugeridos',
+    profileVotesSection: '🗳️ Historial de votos',
+    profileNoNames: 'Todavía no sugirió ningún nombre.',
+    profileNoVotes: 'Todavía no votó ningún duelo.',
+    profileDeleteName: 'Borrar nombre',
+
     rankingTitle: '🏆 Ranking',
     rankingCombined: 'Combinado',
     rankingMine: 'El mío',
@@ -170,6 +214,13 @@ export const locales: Record<Locale, Strings> = {
     adminDeleteVotesSuccess: 'Votos borrados.',
     adminDeleteUserSuccess: 'Usuario borrado.',
     adminErrorMsg: 'Ocurrió un error. Intentá de nuevo.',
+
+    infoTitle: '¿De qué se trata?',
+    infoPurpose: 'Esta app es para elegir el nombre del bebé al nacer, involucrando a amigos y familia en la elección. ¡Nos encanta que todos puedan participar!',
+    infoNotBinding: 'Aclaración importante: nos reservamos el derecho de elegir un nombre diferente al ganador 😄 Esto no es vinculante, pero tu voto sí importa.',
+    infoLucia: 'La última vez, con Lucía, elegimos los dos nombres ganadores de nena y así se formó su nombre. Pero no necesariamente va a ser lo mismo esta vez.',
+    infoGender: 'Todavía no sabemos si va a ser un nene o una nena — ¡lo vamos a saber cuando nazca! Por eso la app tiene las dos categorías.',
+    infoDueDate: 'Fecha de parto estimada: 16 de junio 🍼',
   },
 
   // ── English ───────────────────────────────────────────────────────────────────
@@ -215,6 +266,22 @@ export const locales: Record<Locale, Strings> = {
     voteErrorTitle: 'Vote error',
     voteErrorMsg: 'Could not save the vote. The duel is back in the queue.',
 
+    nameModalProposedBy: 'Proposed by',
+    nameModalRanking: 'Combined ranking',
+    nameModalNoVotes: 'No votes yet',
+    nameModalOf: (n) => `of ${n} total`,
+
+    tabUsers: '👥 People',
+    usersTitle: '👥 Users',
+    profileViewProfile: 'My profile',
+    profileBack: '← Back',
+    profileRankingSection: '🏆 Ranking',
+    profileNamesSection: '✨ Suggested names',
+    profileVotesSection: '🗳️ Vote history',
+    profileNoNames: 'No names suggested yet.',
+    profileNoVotes: 'No duels voted yet.',
+    profileDeleteName: 'Delete name',
+
     rankingTitle: '🏆 Ranking',
     rankingCombined: 'Combined',
     rankingMine: 'Mine',
@@ -246,5 +313,12 @@ export const locales: Record<Locale, Strings> = {
     adminDeleteVotesSuccess: 'Votes deleted.',
     adminDeleteUserSuccess: 'User deleted.',
     adminErrorMsg: 'An error occurred. Please try again.',
+
+    infoTitle: 'What is this?',
+    infoPurpose: 'This app is for choosing the baby\'s name at birth, involving friends and family in the decision. We love having everyone participate!',
+    infoNotBinding: 'Important note: we reserve the right to choose a different name than the winner 😄 This is not binding, but your vote absolutely counts.',
+    infoLucia: 'Last time, with Lucía, we picked the two winning girl names and combined them to form her name. But it won\'t necessarily work the same way this time.',
+    infoGender: 'We don\'t know yet whether it\'s a boy or a girl — we\'ll find out at birth! That\'s why the app has both categories.',
+    infoDueDate: 'Estimated due date: June 16 🍼',
   },
 };

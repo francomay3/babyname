@@ -16,7 +16,9 @@ import { IconPlus } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useNames } from '../hooks/useNames';
 import { useLocale } from '../context/LocaleContext';
-import type { Gender } from '../types';
+import { NameDetailModal } from '../components/NameDetailModal';
+import type { BabyName, Gender } from '../types';
+import { capitalizeName } from '../lib/utils';
 
 interface PendingName {
   id: string;
@@ -24,14 +26,21 @@ interface PendingName {
   gender: Gender;
 }
 
-export function AddNamesPage() {
+export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: string) => void }) {
   const { t } = useLocale();
   const [text, setText] = useState('');
   const [gender, setGender] = useState<Gender>('female');
   const [pendingNames, setPendingNames] = useState<PendingName[]>([]);
   const [recentNames, setRecentNames] = useState<Set<string>>(new Set());
+  const [selectedName, setSelectedName] = useState<BabyName | null>(null);
   const { names: femaleNames } = useNames('female');
   const { names: maleNames, addName } = useNames('male');
+
+  function handleNameClick(nameText: string, nameGender: Gender) {
+    const list = nameGender === 'female' ? femaleNames : maleNames;
+    const found = list.find((n) => n.text === nameText);
+    if (found) setSelectedName(found);
+  }
 
   const genderColor = gender === 'female' ? 'pink' : 'blue';
 
@@ -150,7 +159,7 @@ export function AddNamesPage() {
         </Stack>
       </Paper>
 
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
+      <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="xl">
         <NameList
           title={`👧 ${t.femalePluralLabel}`}
           names={displayFemale}
@@ -158,6 +167,7 @@ export function AddNamesPage() {
           countLabel={t.addNamesCount(displayFemale.length)}
           emptyLabel={t.addEmptyState}
           recentNames={recentNames}
+          onNameClick={(name) => handleNameClick(name, 'female')}
         />
         <NameList
           title={`👦 ${t.malePluralLabel}`}
@@ -166,8 +176,11 @@ export function AddNamesPage() {
           countLabel={t.addNamesCount(displayMale.length)}
           emptyLabel={t.addEmptyState}
           recentNames={recentNames}
+          onNameClick={(name) => handleNameClick(name, 'male')}
         />
       </SimpleGrid>
+
+      <NameDetailModal name={selectedName} onClose={() => setSelectedName(null)} onNavigateToUser={onNavigateToUser} />
     </Stack>
   );
 }
@@ -179,6 +192,7 @@ function NameList({
   countLabel,
   emptyLabel,
   recentNames,
+  onNameClick,
 }: {
   title: string;
   names: string[];
@@ -186,6 +200,7 @@ function NameList({
   countLabel: string;
   emptyLabel: string;
   recentNames: Set<string>;
+  onNameClick: (name: string) => void;
 }) {
   return (
     <Paper shadow="sm" radius="lg" p="lg" withBorder>
@@ -204,7 +219,7 @@ function NameList({
         ) : (
           <Stack gap={4}>
             {names.map((name) => (
-              <NameItem key={name} name={name} color={color} isNew={recentNames.has(name)} />
+              <NameItem key={name} name={name} color={color} isNew={recentNames.has(name)} onClick={() => onNameClick(name)} />
             ))}
           </Stack>
         )}
@@ -217,10 +232,12 @@ function NameItem({
   name,
   color,
   isNew,
+  onClick,
 }: {
   name: string;
   color: string;
   isNew: boolean;
+  onClick: () => void;
 }) {
   // Pre-existing items start fully visible (no animation).
   // New items start hidden and slide in via double-rAF.
@@ -238,18 +255,19 @@ function NameItem({
       fz="sm"
       px="xs"
       py={4}
+      onClick={onClick}
       style={{
         opacity: entered ? 1 : 0,
         transform: entered ? 'translateX(0)' : 'translateX(-10px)',
-        // background-color transition is slow so it lingers visibly after isNew → false
         backgroundColor:
           isNew && entered ? `var(--mantine-color-${color}-1)` : 'transparent',
         borderRadius: 6,
+        cursor: 'pointer',
         transition:
           'opacity 0.2s ease, transform 0.2s ease, background-color 1s ease',
       }}
     >
-      {name}
+      {capitalizeName(name)}
     </Text>
   );
 }
