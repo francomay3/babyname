@@ -1,4 +1,4 @@
-# 👶 BabyName
+# 🍞 BabyBread
 
 A web app for choosing a baby's name by having friends and family vote on head-to-head duels between candidate names. Rankings are computed using the [ELO rating system](https://en.wikipedia.org/wiki/Elo_rating_system), the same algorithm used in chess.
 

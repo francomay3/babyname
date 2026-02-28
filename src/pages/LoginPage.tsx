@@ -67,7 +67,7 @@ export function LoginPage() {
               🍞
             </Text>
             <Title order={1} ta="center" c="pink.6">
-              BabyName
+              BabyBread
             </Title>
             <Text c="dimmed" ta="center" fz="sm">
               {t.loginSubtitle}
