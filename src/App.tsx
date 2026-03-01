@@ -290,6 +290,7 @@ export default function App() {
             >
               github.com/francomay3/babyname
             </Text>
+            <Text fz="xs" c="white" opacity={0.6}>v1.0</Text>
           </Group>
         </Box>
       </AppShell.Main>
