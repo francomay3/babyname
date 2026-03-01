@@ -21,6 +21,7 @@ dist/
 .firebase/
 firebase-debug.log
 firestore-debug.log
+firebase-service-account.json
 
 # Temp
 config values.txt
