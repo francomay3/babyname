@@ -20,6 +20,8 @@ import {
 } from '@mantine/core';
 import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
 import { IconLogout, IconChevronDown, IconSettings, IconUser, IconInfoCircle, IconBrandGithub } from '@tabler/icons-react';
+import { getDoc, doc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import { useAuth } from './hooks/useAuth';
 import { useLocale } from './context/LocaleContext';
 import { useAdmin } from './hooks/useAdmin';
@@ -44,6 +46,26 @@ export default function App() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const isVerySmall = useMediaQuery('(max-width: 380px)');
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    getDoc(doc(db, 'users', user.uid)).then((snap) => {
+      const data = snap.data();
+      if (!data) {
+        return;
+      }
+      if (data.hasReadInfo === false) {
+        setInfoOpen(true);
+      }
+    });
+  }, [user?.uid, user]);
+
+  function handleInfoClose() {
+    setInfoOpen(false);
+    if (user) setDoc(doc(db, 'users', user.uid), { hasReadInfo: true }, { merge: true });
+  }
 
   function tabLabel(label: string) {
     if (!isVerySmall) return label;
@@ -159,8 +181,7 @@ export default function App() {
       <AppShell.Header px={{ base: 'xs', xs: 'md' }}>
         <Group h="100%" justify="space-between">
           <UnstyledButton onClick={() => { setProfileUserId(null); handleTabChange(phase === 'add' ? 'add' : 'vote'); }}>
-            <Text fw={700} fz="lg" c="pink.6" visibleFrom="xs">{t.appTitle}</Text>
-            <Text fw={700} fz="xl" c="pink.6" hiddenFrom="xs">🍞</Text>
+            <Text fw={700} fz="lg" c="pink.6">{t.appTitle}</Text>
           </UnstyledButton>
           <Group gap="xs" align="center">
             <ActionIcon variant="subtle" color="pink" size="sm" onClick={() => setInfoOpen(true)}>
@@ -286,7 +307,7 @@ export default function App() {
 
     <Modal
       opened={infoOpen}
-      onClose={() => setInfoOpen(false)}
+      onClose={handleInfoClose}
       title={<Text fw={700} fz="lg" c="pink.6">{t.infoTitle}</Text>}
       centered
       size="md"
@@ -308,7 +329,7 @@ export default function App() {
           />
         </Box>
         <Text fz="sm">{t.infoPurpose}</Text>
-        <Text fz="sm">{t.infoNotBinding}</Text>
+        <Text fz="sm"><span dangerouslySetInnerHTML={{ __html: t.infoNotBinding }} /></Text>
         <Text fz="sm">{t.infoLucia}</Text>
         <Text fz="sm">{t.infoGender}</Text>
         <Group gap="xs" wrap="wrap" mt="xs">

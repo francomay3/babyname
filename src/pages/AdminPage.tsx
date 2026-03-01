@@ -30,7 +30,8 @@ import { useAuth } from '../hooks/useAuth';
 
 type ConfirmAction = { action: 'resetVotes' | 'deleteUser'; uid: string; name: string };
 
-function toDatetimeLocal(date: Date): string {
+function toDatetimeLocal(date: Date | null): string {
+  if (!date) return '';
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

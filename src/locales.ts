@@ -175,7 +175,7 @@ export const locales: Record<Locale, Strings> = {
     malePluralLabel: 'Nenes',
 
     loginSubtitle:
-      'Ayudanos a elegir el nombre del bebe que tenemos en el horno 🍞',
+      'Ayudanos a elegir el nombre del bebe que tenemos en el horno',
     loginButton: 'Entrar con Google',
     loginOrDivider: 'o',
     loginEmailPlaceholder: 'Email',
@@ -265,8 +265,8 @@ export const locales: Record<Locale, Strings> = {
 
     infoTitle: '¿De qué se trata?',
     infoPurpose: 'Esta app es para elegir el nombre del bebé al nacer, involucrando a amigos y familia en la elección.',
-    infoNotBinding: '🚨 Aclaración importante: nos reservamos el derecho de elegir un nombre diferente al ganador 😄 Esto no es vinculante, pero tu voto sí importa.',
-    infoLucia: 'La última vez, con Lucía, elegimos los dos nombres ganadores de nena y así se formó su nombre. Pero no necesariamente va a ser lo mismo esta vez.',
+    infoNotBinding: '🚨 <strong>Aclaración importante:</strong> nos reservamos el derecho de elegir un nombre diferente al ganador 😄 Esto no es vinculante, pero tu voto sí importa.',
+    infoLucia: 'La última vez, con Lucía, elegimos los dos nombres ganadores y así se formó su nombre. Pero no necesariamente va a ser lo mismo esta vez.',
     infoGender: 'Todavía no sabemos si va a ser un nene o una nena. ¡lo vamos a saber cuando nazca! Por eso la app tiene las dos categorías.',
     infoDueDateLabel: 'Fecha estimada de parto:',
     infoDueDateValue: '<strong>16 de junio</strong> 🍼',
@@ -306,7 +306,7 @@ export const locales: Record<Locale, Strings> = {
     malePluralLabel: 'Boys',
 
     loginSubtitle:
-      "Help us choose the name of the baby mom is currently baking 🍞",
+      "Help us choose the name of the baby mom is currently baking",
     loginButton: 'Sign in with Google',
     loginOrDivider: 'or',
     loginEmailPlaceholder: 'Email',
@@ -396,8 +396,8 @@ export const locales: Record<Locale, Strings> = {
 
     infoTitle: 'What is this?',
     infoPurpose: 'This app is for choosing the baby\'s name at birth, involving friends and family in the decision.',
-    infoNotBinding: '🚨 Important note: we reserve the right to choose a different name than the winner 😄 This is not binding, but your vote absolutely counts.',
-    infoLucia: 'Last time, with Lucía, we picked the two winning girl names and combined them to form her name. But it won\'t necessarily work the same way this time.',
+    infoNotBinding: '🚨 <strong>Important note:</strong> we reserve the right to choose a different name than the winner 😄 This is not binding, but your vote absolutely counts.',
+    infoLucia: 'Last time, with Lucía, we picked the two winning names and combined them to form her name. But it won\'t necessarily work the same way this time.',
     infoGender: 'We don\'t know yet whether it\'s a boy or a girl. We\'ll find out at birth! That\'s why the app has both categories.',
     infoDueDateLabel: 'Estimated due date:',
     infoDueDateValue: '<strong>June 16</strong> 🍼',

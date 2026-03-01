@@ -37,8 +37,8 @@ function VoteLockedScreen({
   onGoToNames,
 }: {
   phase: Phase;
-  date1: Date;
-  date2: Date;
+  date1: Date | null;
+  date2: Date | null;
   locale: Locale;
   onGoToNames: () => void;
 }) {
@@ -46,8 +46,8 @@ function VoteLockedScreen({
   const title = phase === 'add' ? t.phaseVoteNotYetTitle : t.phaseSelectingTitle;
   const body =
     phase === 'add'
-      ? t.phaseVoteNotYetBody(formatPhaseDate(date1, locale))
-      : t.phaseSelectingBody(formatPhaseDate(date2, locale));
+      ? t.phaseVoteNotYetBody(date1 ? formatPhaseDate(date1, locale) : '')
+      : t.phaseSelectingBody(date2 ? formatPhaseDate(date2, locale) : '');
 
   return (
     <Center h={300}>

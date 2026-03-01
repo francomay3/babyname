@@ -2,9 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" id="favicon" />
+    <script>
+      const canvas = document.createElement('canvas');
+      canvas.width = 64; canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.font = '56px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🍞', 32, 36);
+      document.getElementById('favicon').href = canvas.toDataURL();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🍞 BabyBread</title>
+    <title>BabyBread</title>
   </head>
   <body>
     <div id="root"></div>
