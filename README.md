@@ -4,6 +4,8 @@ A web app for choosing a baby's name by having friends and family vote on head-t
 
 **Live:** https://babyname-e092d.web.app
 
+**Maintenance note (Mar 1 2026):** Repo access verified via Calder on Raspberry Pi.
+
 ---
 
 ## What it does
