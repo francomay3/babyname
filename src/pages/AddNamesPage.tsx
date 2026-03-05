@@ -16,6 +16,7 @@ import {
   ActionIcon,
   Loader,
   Modal,
+  Anchor,
 } from '@mantine/core';
 import { IconPlus, IconInfoCircle, IconLock, IconTrash } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
@@ -394,9 +395,22 @@ function NameItem({
         transition: 'opacity 0.2s ease, transform 0.2s ease, background-color 1s ease',
       }}
     >
-      <Text fz="sm" onClick={onClick} style={{ cursor: 'pointer', flex: 1 }}>
+      <Anchor
+        component="button"
+        onClick={onClick}
+        size="sm"
+        c={`${color}.7`}
+        style={{
+          cursor: 'pointer',
+          flex: 1,
+          textAlign: 'left',
+          fontWeight: 500,
+          textDecoration: 'underline',
+          textDecorationThickness: 1,
+        }}
+      >
         {capitalizeName(name)}
-      </Text>
+      </Anchor>
       {isDeleting ? (
         <Loader size="xs" color="red" />
       ) : onDelete ? (

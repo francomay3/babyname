@@ -179,7 +179,13 @@ export function UserProfilePage({
                     >
                       {name.gender === 'female' ? t.femaleLabel : t.maleLabel}
                     </Badge>
-                    <Text fz="sm">{capitalizeName(name.text)}</Text>
+                    <Text
+                      fz="sm"
+                      c={name.gender === 'female' ? 'pink.7' : 'blue.7'}
+                      td="underline"
+                    >
+                      {capitalizeName(name.text)}
+                    </Text>
                   </Group>
                 </UnstyledButton>
                 {canDeleteNames && (

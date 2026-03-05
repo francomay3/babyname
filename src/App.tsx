@@ -33,10 +33,12 @@ import { RankingPage } from './pages/RankingPage';
 import { UsersPage } from './pages/UsersPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { AdminPage } from './pages/AdminPage';
+import appVersionRaw from '../version.txt?raw';
 
 type Tab = 'add' | 'vote' | 'ranking' | 'users';
 
 const TAB_ORDER: Record<Tab, number> = { add: 0, vote: 1, ranking: 2, users: 3 };
+const appVersion = appVersionRaw.trim();
 
 export default function App() {
   const { user, loading, logOut } = useAuth();
@@ -106,7 +108,7 @@ export default function App() {
       setDisplayTab(defaultTab);
       tabWasPreset.current = true;
     }
-  }, [phaseLoading, phase]);
+  }, [phaseLoading, phase, setTab]);
 
   const [profileUserId, setProfileUserId] = useState<string | null>(() => {
     try {
@@ -290,7 +292,7 @@ export default function App() {
             >
               github.com/francomay3/babyname
             </Text>
-            <Text fz="xs" c="white" opacity={0.6}>v1.0</Text>
+            <Text fz="xs" c="white" opacity={0.6}>v{appVersion}</Text>
           </Group>
         </Box>
       </AppShell.Main>

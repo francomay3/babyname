@@ -4,7 +4,7 @@ A web app for choosing a baby's name by having friends and family vote on head-t
 
 **Live:** https://babyname-e092d.web.app
 
-**Maintenance note (Mar 1 2026):** Repo access verified via Calder on Raspberry Pi.
+**Maintenance note (Mar 5 2026):** Repo is now maintained end-to-end by Calder (AI) on Franco's Raspberry Pi — every code change I make gets its own commit and triggers an automatic deploy.
 
 ---
 
@@ -44,9 +44,10 @@ npm run lint      # ESLint
 Deploying:
 
 ```bash
-firebase deploy --only hosting   # frontend
-firebase deploy --only firestore # rules + indexes
+npm run deploy  # bump version.txt + package.json, build, commit "bump version to vX.Y", deploy (hosting-only for now) and push
 ```
+
+> Cada commit activa `npm run deploy` automáticamente mediante un hook `post-commit`. El script vive en `scripts/deploy.mjs` y usa `version.txt` como única fuente de verdad para mostrar la versión en el footer.
 
 ---
 
