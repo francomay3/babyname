@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Accordion,
   ActionIcon,
@@ -51,6 +51,11 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
   const [date1Input, setDate1Input] = useState(() => toDatetimeLocal(date1));
   const [date2Input, setDate2Input] = useState(() => toDatetimeLocal(date2));
   const [savingPhases, setSavingPhases] = useState(false);
+
+  useEffect(() => {
+    setDate1Input(toDatetimeLocal(date1));
+    setDate2Input(toDatetimeLocal(date2));
+  }, [date1, date2]);
 
   async function handleConfirm() {
     if (!confirmModal) return;
