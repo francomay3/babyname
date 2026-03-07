@@ -47,8 +47,20 @@ export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: st
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const femaleNames = useMemo(() => allNames.filter((n) => n.gender === 'female'), [allNames]);
-  const maleNames = useMemo(() => allNames.filter((n) => n.gender === 'male'), [allNames]);
+  const femaleNames = useMemo(
+    () =>
+      allNames
+        .filter((n) => n.gender === 'female')
+        .sort((a, b) => a.text.localeCompare(b.text, locale, { sensitivity: 'base' })),
+    [allNames, locale]
+  );
+  const maleNames = useMemo(
+    () =>
+      allNames
+        .filter((n) => n.gender === 'male')
+        .sort((a, b) => a.text.localeCompare(b.text, locale, { sensitivity: 'base' })),
+    [allNames, locale]
+  );
 
   // Pending names not yet confirmed by Firestore — checked against allNames (not
   // femaleNames/maleNames) so that deleting a just-added name doesn't cause it
@@ -61,8 +73,9 @@ export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: st
             p.gender === 'female' &&
             !allNames.some((n) => n.gender === 'female' && n.text.toLowerCase() === p.text.toLowerCase())
         )
-        .map((p) => p.text),
-    [pendingNames, allNames]
+        .map((p) => p.text)
+        .sort((a, b) => a.localeCompare(b, locale, { sensitivity: 'base' })),
+    [pendingNames, allNames, locale]
   );
   const pendingMale = useMemo(
     () =>
@@ -72,8 +85,9 @@ export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: st
             p.gender === 'male' &&
             !allNames.some((n) => n.gender === 'male' && n.text.toLowerCase() === p.text.toLowerCase())
         )
-        .map((p) => p.text),
-    [pendingNames, allNames]
+        .map((p) => p.text)
+        .sort((a, b) => a.localeCompare(b, locale, { sensitivity: 'base' })),
+    [pendingNames, allNames, locale]
   );
 
   function handleNameClick(nameText: string, nameGender: Gender) {

@@ -1,4 +1,4 @@
-import { useState, useOptimistic, startTransition } from 'react';
+import { useState, useOptimistic, startTransition, useMemo } from 'react';
 import {
   ActionIcon,
   Avatar,
@@ -39,7 +39,7 @@ export function UserProfilePage({
 }) {
   const { user, allUsers } = useAuth();
   const { isAdmin } = useAdmin();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { names: allNames, deleteName } = useNames();
   const { matches, loading: profileLoading, resetVotes, deleteMatch } = useUserProfile(userId);
   const { buildRanking: buildFemale, loading: femaleLoading } = useRanking('female');
@@ -61,6 +61,11 @@ export function UserProfilePage({
   const [optimisticNames, removeOptimistic] = useOptimistic(
     userNames,
     (current, deletedId: string) => current.filter((n) => n.id !== deletedId)
+  );
+  const sortedOptimisticNames = useMemo(
+    () =>
+      [...optimisticNames].sort((a, b) => a.text.localeCompare(b.text, locale, { sensitivity: 'base' })),
+    [optimisticNames, locale]
   );
   const [optimisticMatches, removeOptimisticMatch] = useOptimistic(
     matches,
@@ -134,7 +139,7 @@ export function UserProfilePage({
         <div>
           <Text fw={700} fz="lg">{userInfo?.displayName ?? userId}</Text>
           <Text fz="xs" c="dimmed">
-            {t.adminNamesCount(optimisticNames.length)} · {t.adminVotesCount(totalDuels)}
+            {t.adminNamesCount(sortedOptimisticNames.length)} · {t.adminVotesCount(totalDuels)}
           </Text>
         </div>
       </Group>
@@ -161,13 +166,13 @@ export function UserProfilePage({
       {/* ── Names ── */}
       <Stack gap="sm">
         <Title order={4}>{t.profileNamesSection}</Title>
-        {optimisticNames.length === 0 ? (
+        {sortedOptimisticNames.length === 0 ? (
           <Center h={60}>
             <Text c="dimmed" fz="sm">{t.profileNoNames}</Text>
           </Center>
         ) : (
           <Stack gap={6}>
-            {optimisticNames.map((name) => (
+            {sortedOptimisticNames.map((name) => (
               <Group key={name.id} justify="space-between" wrap="nowrap">
                 <UnstyledButton onClick={() => setSelectedName(name)} style={{ flex: 1, minWidth: 0 }}>
                   <Group gap="xs" wrap="nowrap">
