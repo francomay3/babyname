@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { CSSProperties } from 'react';
 import {
   AppShell,
@@ -131,8 +131,9 @@ export default function App() {
   }, [user]);
   const [contentStyle, setContentStyle] = useState<CSSProperties>({});
   const transitionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const historyGuardInitialized = useRef(false);
 
-  function handleTabChange(newTab: Tab) {
+  const handleTabChange = useCallback((newTab: Tab) => {
     if (newTab === displayTab) return;
     const dir = TAB_ORDER[newTab] > TAB_ORDER[displayTab] ? 1 : -1;
     setTab(newTab);
@@ -163,7 +164,53 @@ export default function App() {
         )
       );
     }, 150);
-  }
+  }, [displayTab, setTab]);
+
+  const handleLogoClick = useCallback(() => {
+    setProfileUserId(null);
+    handleTabChange(phase === 'add' ? 'add' : 'vote');
+  }, [handleTabChange, phase]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!user) {
+      historyGuardInitialized.current = false;
+      return;
+    }
+
+    const withSentinel = (state: unknown) => {
+      if (state && typeof state === 'object') {
+        return { ...(state as Record<string, unknown>), babynameSentinel: true };
+      }
+      return { babynameSentinel: true };
+    };
+
+    const markState = (method: 'pushState' | 'replaceState') => {
+      window.history[method](withSentinel(window.history.state), '', window.location.href);
+    };
+
+    const hasSentinel = typeof window.history.state === 'object' && window.history.state !== null && 'babynameSentinel' in window.history.state;
+
+    if (!hasSentinel) {
+      markState('replaceState');
+    }
+
+    if (!historyGuardInitialized.current) {
+      markState('pushState');
+      historyGuardInitialized.current = true;
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      handleLogoClick();
+      markState('pushState');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [handleLogoClick, user]);
 
   if (loading) {
     return (
@@ -182,7 +229,7 @@ export default function App() {
     <AppShell header={{ height: 60 }} padding="md">
       <AppShell.Header px={{ base: 'xs', xs: 'md' }}>
         <Group h="100%" justify="space-between">
-          <UnstyledButton onClick={() => { setProfileUserId(null); handleTabChange(phase === 'add' ? 'add' : 'vote'); }}>
+          <UnstyledButton onClick={handleLogoClick}>
             <Text fw={700} fz="lg" c="pink.6">{t.appTitle}</Text>
           </UnstyledButton>
           <Group gap="xs" align="center">
