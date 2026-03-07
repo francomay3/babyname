@@ -171,6 +171,15 @@ export default function App() {
     handleTabChange(phase === 'add' ? 'add' : 'vote');
   }, [handleTabChange, phase]);
 
+  const handleHistoryBack = useCallback(() => {
+    if (profileUserId) {
+      setProfileUserId(null);
+      handleTabChange('users');
+      return;
+    }
+    handleLogoClick();
+  }, [handleLogoClick, handleTabChange, profileUserId]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!user) {
@@ -202,7 +211,7 @@ export default function App() {
 
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
-      handleLogoClick();
+      handleHistoryBack();
       markState('pushState');
     };
 
@@ -210,7 +219,7 @@ export default function App() {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [handleLogoClick, user]);
+  }, [handleHistoryBack, user]);
 
   if (loading) {
     return (
