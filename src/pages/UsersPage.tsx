@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Avatar, Group, Paper, Stack, Text, Title, UnstyledButton } from '@mantine/core';
 import { IconChevronRight } from '@tabler/icons-react';
 import { useAuth } from '../hooks/useAuth';
@@ -9,10 +10,19 @@ export function UsersPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
   const { t } = useLocale();
   const { statsByUserId } = useUserStatsSummary();
 
+  const sortedUsers = useMemo(() => {
+    return [...allUsers].sort((a, b) => {
+      const aCount = statsByUserId[a.uid]?.namesCount ?? 0;
+      const bCount = statsByUserId[b.uid]?.namesCount ?? 0;
+      if (bCount !== aCount) return bCount - aCount;
+      return (a.displayName ?? '').localeCompare(b.displayName ?? '', undefined, { sensitivity: 'base' });
+    });
+  }, [allUsers, statsByUserId]);
+
   return (
     <Stack gap="sm">
       <Title order={4}>{t.usersTitle}</Title>
-      {allUsers.map((u) => {
+      {sortedUsers.map((u) => {
         const stats = statsByUserId[u.uid];
         const namesCount = stats?.namesCount ?? 0;
         const votesCount = stats?.votesCount ?? 0;
