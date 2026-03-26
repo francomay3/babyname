@@ -1,4 +1,4 @@
-import { useState, useOptimistic, startTransition, useMemo } from 'react';
+import { useState, useOptimistic, startTransition } from 'react';
 import {
   ActionIcon,
   Avatar,
@@ -39,34 +39,23 @@ export function UserProfilePage({
 }) {
   const { user, allUsers } = useAuth();
   const { isAdmin } = useAdmin();
-  const { t, locale } = useLocale();
-  const { names: allNames, deleteName } = useNames();
+  const { t } = useLocale();
+  const { names: allNames } = useNames();
   const { matches, loading: profileLoading, resetVotes, deleteMatch } = useUserProfile(userId);
   const { buildRanking: buildFemale, loading: femaleLoading } = useRanking('female');
   const { buildRanking: buildMale, loading: maleLoading } = useRanking('male');
 
   const [genderView, setGenderView] = useState<'female' | 'male'>('female');
   const [confirmDeleteVotes, setConfirmDeleteVotes] = useState(false);
-  const [confirmDeleteName, setConfirmDeleteName] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState<BabyName | null>(null);
   const [showAllVotes, setShowAllVotes] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const isOwnProfile = user?.uid === userId;
   const canDeleteVotes = isAdmin || isOwnProfile;
-  const canDeleteNames = isAdmin;
 
   const userInfo = allUsers.find((u) => u.uid === userId);
-  const userNames = allNames.filter((n) => n.addedBy === userId);
-  const [optimisticNames, removeOptimistic] = useOptimistic(
-    userNames,
-    (current, deletedId: string) => current.filter((n) => n.id !== deletedId)
-  );
-  const sortedOptimisticNames = useMemo(
-    () =>
-      [...optimisticNames].sort((a, b) => a.text.localeCompare(b.text, locale, { sensitivity: 'base' })),
-    [optimisticNames, locale]
-  );
+  const userNamesCount = allNames.filter((n) => n.addedBy === userId).length;
   const [optimisticMatches, removeOptimisticMatch] = useOptimistic(
     matches,
     (current, deletedId: string) => current.filter((m) => m.id !== deletedId)
@@ -104,19 +93,6 @@ export function UserProfilePage({
     });
   }
 
-  async function handleDeleteName() {
-    if (!confirmDeleteName) return;
-    const nameId = confirmDeleteName;
-    setConfirmDeleteName(null);
-    startTransition(async () => {
-      removeOptimistic(nameId);
-      try {
-        await deleteName(nameId);
-      } catch {
-        notifications.show({ color: 'red', message: t.adminErrorMsg });
-      }
-    });
-  }
 
   if (profileLoading || femaleLoading || maleLoading) {
     return (
@@ -139,7 +115,7 @@ export function UserProfilePage({
         <div>
           <Text fw={700} fz="lg">{userInfo?.displayName ?? userId}</Text>
           <Text fz="xs" c="dimmed">
-            {t.adminNamesCount(sortedOptimisticNames.length)} · {t.adminVotesCount(totalDuels)}
+            {t.adminNamesCount(userNamesCount)} · {t.adminVotesCount(totalDuels)}
           </Text>
         </div>
       </Group>
@@ -163,52 +139,6 @@ export function UserProfilePage({
         <ProfileRankingTable ranking={ranking} noVotesMsg={genderView === 'female' ? t.rankingNoVotesFemale : t.rankingNoVotesMale} onNameClick={setSelectedName} />
       </Stack>
 
-      {/* ── Names ── */}
-      <Stack gap="sm">
-        <Title order={4}>{t.profileNamesSection}</Title>
-        {sortedOptimisticNames.length === 0 ? (
-          <Center h={60}>
-            <Text c="dimmed" fz="sm">{t.profileNoNames}</Text>
-          </Center>
-        ) : (
-          <Stack gap={6}>
-            {sortedOptimisticNames.map((name) => (
-              <Group key={name.id} justify="space-between" wrap="nowrap">
-                <UnstyledButton onClick={() => setSelectedName(name)} style={{ flex: 1, minWidth: 0 }}>
-                  <Group gap="xs" wrap="nowrap">
-                    <Badge
-                      variant="light"
-                      color={name.gender === 'female' ? 'pink' : 'blue'}
-                      radius="xl"
-                      size="sm"
-                    >
-                      {name.gender === 'female' ? t.femaleLabel : t.maleLabel}
-                    </Badge>
-                    <Text
-                      fz="sm"
-                      c={name.gender === 'female' ? 'pink.7' : 'blue.7'}
-                      td="underline"
-                    >
-                      {capitalizeName(name.text)}
-                    </Text>
-                  </Group>
-                </UnstyledButton>
-                {canDeleteNames && (
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    size="sm"
-                    title={t.profileDeleteName}
-                    onClick={() => setConfirmDeleteName(name.id)}
-                  >
-                    <IconTrash size={14} />
-                  </ActionIcon>
-                )}
-              </Group>
-            ))}
-          </Stack>
-        )}
-      </Stack>
 
       {/* ── Votes ── */}
       <Stack gap="sm">
@@ -297,26 +227,6 @@ export function UserProfilePage({
         </Group>
       </Modal>
 
-      {/* ── Confirm delete name modal ── */}
-      <Modal
-        opened={!!confirmDeleteName}
-        onClose={() => setConfirmDeleteName(null)}
-        title={t.adminConfirmTitle}
-        size="sm"
-        centered
-      >
-        <Text fz="sm" mb="lg">
-          {t.profileDeleteName}: <Text span fw={700}>{capitalizeName(allNames.find((n) => n.id === confirmDeleteName)?.text ?? '')}</Text>
-        </Text>
-        <Group justify="flex-end">
-          <Button variant="default" size="sm" onClick={() => setConfirmDeleteName(null)}>
-            {t.adminCancel}
-          </Button>
-          <Button color="red" size="sm" loading={busy} onClick={handleDeleteName}>
-            {t.adminConfirm}
-          </Button>
-        </Group>
-      </Modal>
     </Stack>
   );
 }

@@ -12,9 +12,9 @@ export function UsersPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
 
   const sortedUsers = useMemo(() => {
     return [...allUsers].sort((a, b) => {
-      const aCount = statsByUserId[a.uid]?.namesCount ?? 0;
-      const bCount = statsByUserId[b.uid]?.namesCount ?? 0;
-      if (bCount !== aCount) return bCount - aCount;
+      const aVotes = statsByUserId[a.uid]?.votesCount ?? 0;
+      const bVotes = statsByUserId[b.uid]?.votesCount ?? 0;
+      if (bVotes !== aVotes) return bVotes - aVotes;
       return (a.displayName ?? '').localeCompare(b.displayName ?? '', undefined, { sensitivity: 'base' });
     });
   }, [allUsers, statsByUserId]);
@@ -24,7 +24,6 @@ export function UsersPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
       <Title order={4}>{t.usersTitle}</Title>
       {sortedUsers.map((u) => {
         const stats = statsByUserId[u.uid];
-        const namesCount = stats?.namesCount ?? 0;
         const votesCount = stats?.votesCount ?? 0;
 
         return (
@@ -45,7 +44,7 @@ export function UsersPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
                       )}
                     </Text>
                     <Text size="xs" c="dimmed">
-                      {t.adminNamesCount(namesCount)} · {t.adminVotesCount(votesCount)}
+                      {t.adminVotesCount(votesCount)}
                     </Text>
                   </div>
                 </Group>

@@ -34,7 +34,7 @@ interface PendingName {
   gender: Gender;
 }
 
-export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: string) => void }) {
+export function AddNamesPage() {
   const { t, locale } = useLocale();
   const { phase, date1 } = usePhases();
   const { isAdmin } = useAdmin();
@@ -266,7 +266,7 @@ export function AddNamesPage({ onNavigateToUser }: { onNavigateToUser?: (uid: st
         />
       </SimpleGrid>
 
-      <NameDetailModal name={selectedName} onClose={() => setSelectedName(null)} onNavigateToUser={onNavigateToUser} />
+      <NameDetailModal name={selectedName} onClose={() => setSelectedName(null)} />
 
       <Modal
         opened={confirmDeleteId !== null}

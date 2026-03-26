@@ -318,9 +318,14 @@ export default function App() {
               </Tabs>
 
               <div style={contentStyle}>
-                {displayTab === 'add' && <AddNamesPage onNavigateToUser={setProfileUserId} />}
-                {displayTab === 'vote' && <VotePage onGoToNames={() => handleTabChange('add')} />}
-                {displayTab === 'ranking' && <RankingPage onNavigateToUser={setProfileUserId} />}
+                {displayTab === 'add' && <AddNamesPage />}
+                {displayTab === 'vote' && (
+                  <VotePage
+                    onGoToNames={() => handleTabChange('add')}
+                    onGoToRanking={() => handleTabChange('ranking')}
+                  />
+                )}
+                {displayTab === 'ranking' && <RankingPage />}
                 {displayTab === 'users' && <UsersPage onNavigateToUser={setProfileUserId} />}
               </div>
             </>

@@ -22,7 +22,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
-export function RankingPage({ onNavigateToUser }: { onNavigateToUser?: (uid: string) => void }) {
+export function RankingPage() {
   const [view, setView] = useState<'mine' | 'combined'>('combined');
   const [selectedName, setSelectedName] = useState<BabyName | null>(null);
   const { myRanking: femaleMyRanking, combinedRanking: femaleCombinedRanking, loading: femaleLoading } = useRanking('female');
@@ -79,7 +79,7 @@ export function RankingPage({ onNavigateToUser }: { onNavigateToUser?: (uid: str
         onNameClick={setSelectedName}
       />
 
-      <NameDetailModal name={selectedName} onClose={() => setSelectedName(null)} onNavigateToUser={onNavigateToUser} />
+      <NameDetailModal name={selectedName} onClose={() => setSelectedName(null)} />
     </Stack>
   );
 }

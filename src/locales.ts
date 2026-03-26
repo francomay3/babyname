@@ -340,7 +340,7 @@ export const locales: Record<Locale, Strings> = {
     voteNotEnoughLink: 'Add more names in the "Names" tab →',
     voteAllDoneTitle: "You've voted on all possible duels!",
     voteAllDoneSubtitle: 'New duels will appear when new names are added.',
-    voteAllDoneLink: 'Go add names →',
+    voteAllDoneLink: 'Go to ranking →',
     voteErrorTitle: 'Vote error',
     voteErrorMsg: 'Could not save the vote. The duel is back in the queue.',
 

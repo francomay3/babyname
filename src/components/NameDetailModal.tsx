@@ -1,5 +1,4 @@
-import { Avatar, Badge, Center, Group, Loader, Modal, Stack, Text, UnstyledButton } from '@mantine/core';
-import { useAuth } from '../hooks/useAuth';
+import { Badge, Center, Loader, Modal, Stack, Text } from '@mantine/core';
 import { useRanking } from '../hooks/useRanking';
 import { useLocale } from '../context/LocaleContext';
 import type { BabyName } from '../types';
@@ -8,30 +7,22 @@ import { capitalizeName } from '../lib/utils';
 export function NameDetailModal({
   name,
   onClose,
-  onNavigateToUser,
 }: {
   name: BabyName | null;
   onClose: () => void;
-  onNavigateToUser?: (uid: string) => void;
 }) {
-  function handleNavigate(uid: string) {
-    onClose();
-    onNavigateToUser?.(uid);
-  }
   return (
     <Modal opened={!!name} onClose={onClose} centered size="sm" withCloseButton>
-      {name && <ModalContent name={name} onNavigateToUser={onNavigateToUser ? handleNavigate : undefined} />}
+      {name && <ModalContent name={name} />}
     </Modal>
   );
 }
 
-function ModalContent({ name, onNavigateToUser }: { name: BabyName; onNavigateToUser?: (uid: string) => void }) {
-  const { allUsers } = useAuth();
+function ModalContent({ name }: { name: BabyName }) {
   const { t } = useLocale();
   const { combinedRanking, loading } = useRanking(name.gender);
 
   const genderColor = name.gender === 'female' ? 'pink' : 'blue';
-  const proposer = allUsers.find((u) => u.uid === name.addedBy);
 
   const votedRanking = combinedRanking.filter((n) => n.matches > 0);
   const position = votedRanking.findIndex((n) => n.id === name.id) + 1;
@@ -49,29 +40,6 @@ function ModalContent({ name, onNavigateToUser }: { name: BabyName; onNavigateTo
         </Badge>
       </Stack>
 
-      {/* Proposer */}
-      <UnstyledButton
-        onClick={() => proposer && onNavigateToUser?.(proposer.uid)}
-        style={{ cursor: proposer && onNavigateToUser ? 'pointer' : 'default' }}
-      >
-        <Group gap="md" align="center" wrap="nowrap">
-          <Avatar src={proposer?.photoURL || undefined} size="md" radius="xl">
-            {proposer?.displayName?.[0]}
-          </Avatar>
-          <Stack gap={2} justify="center">
-            <Text fz="xs" c="dimmed" fw={600}>
-              {t.nameModalProposedBy}
-            </Text>
-            <Text
-              fw={600}
-              c={proposer && onNavigateToUser ? 'pink.6' : 'dark'}
-              td={proposer && onNavigateToUser ? 'underline' : undefined}
-            >
-              {proposer?.displayName ?? '?'}
-            </Text>
-          </Stack>
-        </Group>
-      </UnstyledButton>
 
       {/* Combined ranking */}
       {loading ? (

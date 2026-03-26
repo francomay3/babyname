@@ -27,6 +27,7 @@ import type { Locale } from '../locales';
 
 interface Props {
   onGoToNames: () => void;
+  onGoToRanking: () => void;
 }
 
 function VoteLockedScreen({
@@ -104,7 +105,7 @@ function pickPair(
   return validPairs[validPairs.length - 1];
 }
 
-export function VotePage({ onGoToNames }: Props) {
+export function VotePage({ onGoToNames, onGoToRanking }: Props) {
   const { user } = useAuth();
   const { vote } = useVote();
   const { t, locale } = useLocale();
@@ -300,7 +301,7 @@ export function VotePage({ onGoToNames }: Props) {
           <Text c="dimmed" ta="center" fz="sm">
             {t.voteAllDoneSubtitle}
           </Text>
-          <Anchor component="button" onClick={onGoToNames} c="pink.6" fz="sm">
+          <Anchor component="button" onClick={onGoToRanking} c="pink.6" fz="sm">
             {t.voteAllDoneLink}
           </Anchor>
         </Stack>
