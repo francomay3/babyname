@@ -58,7 +58,7 @@ export function useRanking(gender: Gender) {
           const myScore = nameScores.find((s) => s.userId === targetUserId);
           return {
             ...name,
-            eloScore: myScore?.eloScore ?? 1000,
+            eloScore: myScore?.eloScore ?? 0,
             wins: myScore?.wins ?? 0,
             losses: myScore?.losses ?? 0,
             matches: myScore?.matches ?? 0,

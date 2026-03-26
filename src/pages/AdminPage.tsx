@@ -18,6 +18,7 @@ import {
   IconAlertTriangle,
   IconCalendar,
   IconExternalLink,
+  IconRefresh,
   IconTrash,
   IconUserOff,
   IconUserPlus,
@@ -39,8 +40,17 @@ function toDatetimeLocal(date: Date | null): string {
 export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string) => void }) {
   const { t } = useLocale();
   const { user } = useAuth();
-  const { adminUids, allUsersWithStats, resetUserVotes, deleteUser, resetDatabase, addAdmin, removeAdmin, savePhases } =
-    useAdmin();
+  const {
+    adminUids,
+    allUsersWithStats,
+    resetUserVotes,
+    deleteUser,
+    resetDatabase,
+    recalculateAllRankings,
+    addAdmin,
+    removeAdmin,
+    savePhases,
+  } = useAdmin();
   const { phase, date1, date2 } = usePhases();
 
   const [confirmModal, setConfirmModal] = useState<ConfirmAction | null>(null);
@@ -84,6 +94,18 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
       notifications.show({ color: 'green', message: t.adminResetSuccess });
       setResetDbModal(false);
       setResetInput('');
+    } catch {
+      notifications.show({ color: 'red', message: t.adminErrorMsg });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRecalculateRanking() {
+    setLoading(true);
+    try {
+      await recalculateAllRankings();
+      notifications.show({ color: 'green', message: t.adminRecalculateSuccess });
     } catch {
       notifications.show({ color: 'red', message: t.adminErrorMsg });
     } finally {
@@ -228,6 +250,15 @@ export function AdminPage({ onNavigateToUser }: { onNavigateToUser: (uid: string
                 onClick={handleSavePhases}
               >
                 {t.adminPhasesSaved}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconRefresh size={14} />}
+                loading={loading}
+                onClick={handleRecalculateRanking}
+              >
+                {t.adminRecalculateRanking}
               </Button>
             </Stack>
           </Accordion.Panel>

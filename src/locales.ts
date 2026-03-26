@@ -145,6 +145,8 @@ export interface Strings {
   adminAddAdmin: string;
   adminRemoveAdmin: string;
   adminResetDb: string;
+  adminRecalculateRanking: string;
+  adminRecalculateSuccess: string;
   adminResetConfirmPrompt: string;
   adminResetConfirmWord: string;
   adminResetSuccess: string;
@@ -252,6 +254,8 @@ export const locales: Record<Locale, Strings> = {
     adminAddAdmin: 'Dar admin',
     adminRemoveAdmin: 'Quitar admin',
     adminResetDb: 'Resetear base de datos',
+    adminRecalculateRanking: 'Recalcular ranking',
+    adminRecalculateSuccess: 'Ranking recalculado.',
     adminResetConfirmPrompt: 'Escribí RESET para confirmar. Esta acción no se puede deshacer.',
     adminResetConfirmWord: 'RESET',
     adminResetSuccess: '¡Base de datos reseteada!',
@@ -383,6 +387,8 @@ export const locales: Record<Locale, Strings> = {
     adminAddAdmin: 'Grant admin',
     adminRemoveAdmin: 'Remove admin',
     adminResetDb: 'Reset database',
+    adminRecalculateRanking: 'Recalculate ranking',
+    adminRecalculateSuccess: 'Ranking recalculated.',
     adminResetConfirmPrompt: 'Type RESET to confirm. This action cannot be undone.',
     adminResetConfirmWord: 'RESET',
     adminResetSuccess: 'Database reset!',

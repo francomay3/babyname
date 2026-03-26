@@ -183,7 +183,7 @@ function RankingRow({
       </Table.Td>
       <Table.Td ta="right">
         {hasData ? (
-          <Badge variant="filled" color={name.eloScore >= 1000 ? 'teal' : 'red'} radius="xl">
+          <Badge variant="filled" color={name.eloScore >= 0 ? 'teal' : 'red'} radius="xl">
             {name.eloScore}
           </Badge>
         ) : (

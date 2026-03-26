@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { newRatings } from './elo';
 import type { Gender } from '../types';
 
-const DEFAULT_ELO = 1000;
+const DEFAULT_ELO = 0;
 
 /**
  * Replays all remaining matches for a user chronologically and rewrites

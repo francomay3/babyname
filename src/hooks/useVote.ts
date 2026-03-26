@@ -12,7 +12,7 @@ import type { BabyName, Gender, UserScore } from '../types';
 import { newRatings } from '../lib/elo';
 import { useAuth } from './useAuth';
 
-const DEFAULT_ELO = 1000;
+const DEFAULT_ELO = 0;
 
 export function useVote() {
   const { user } = useAuth();

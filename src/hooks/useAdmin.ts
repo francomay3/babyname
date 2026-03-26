@@ -7,13 +7,15 @@ import {
   collection,
   query,
   where,
+  orderBy,
   getDocs,
   writeBatch,
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { BabyName, UserScore, AdminConfig } from '../types';
+import type { BabyName, UserScore, AdminConfig, Gender } from '../types';
+import { newRatings } from '../lib/elo';
 import { useAuth } from './useAuth';
 
 const SEED_ADMIN_UID = 'tnA7CzcA6RW3lrdmEjE0ntCSZ3M2';
@@ -164,6 +166,67 @@ export function useAdmin() {
     }
   }, []);
 
+  const recalculateAllRankings = useCallback(async () => {
+    const [matchesSnap, scoresSnap] = await Promise.all([
+      getDocs(query(collection(db, 'matches'), orderBy('timestamp', 'asc'))),
+      getDocs(collection(db, 'userScores')),
+    ]);
+
+    const stats = new Map<string, {
+      userId: string;
+      nameId: string;
+      gender: Gender;
+      eloScore: number;
+      wins: number;
+      losses: number;
+      matches: number;
+    }>();
+
+    const getOrInit = (userId: string, nameId: string, gender: Gender) => {
+      const key = `${userId}_${nameId}`;
+      const existing = stats.get(key);
+      if (existing) return existing;
+      const fresh = { userId, nameId, gender, eloScore: 0, wins: 0, losses: 0, matches: 0 };
+      stats.set(key, fresh);
+      return fresh;
+    };
+
+    for (const d of matchesSnap.docs) {
+      const data = d.data();
+      const userId = data.userId as string;
+      const winnerId = data.winnerId as string;
+      const loserId = data.loserId as string;
+      const gender = data.gender as Gender;
+
+      const w = getOrInit(userId, winnerId, gender);
+      const l = getOrInit(userId, loserId, gender);
+      const { winner, loser } = newRatings(w.eloScore, l.eloScore);
+
+      w.eloScore = winner;
+      w.wins += 1;
+      w.matches += 1;
+
+      l.eloScore = loser;
+      l.losses += 1;
+      l.matches += 1;
+    }
+
+    for (let i = 0; i < scoresSnap.docs.length; i += 500) {
+      const batch = writeBatch(db);
+      scoresSnap.docs.slice(i, i + 500).forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+
+    const allStats = [...stats.values()];
+    for (let i = 0; i < allStats.length; i += 500) {
+      const batch = writeBatch(db);
+      allStats.slice(i, i + 500).forEach((s) => {
+        batch.set(doc(db, 'userScores', `${s.userId}_${s.nameId}`), s);
+      });
+      await batch.commit();
+    }
+  }, []);
+
   const addAdmin = useCallback(async (uid: string) => {
     await updateDoc(doc(db, 'config', 'admins'), { uids: arrayUnion(uid) });
   }, []);
@@ -183,6 +246,7 @@ export function useAdmin() {
     resetUserVotes,
     deleteUser,
     resetDatabase,
+    recalculateAllRankings,
     addAdmin,
     removeAdmin,
     savePhases,

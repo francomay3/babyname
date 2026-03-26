@@ -273,7 +273,7 @@ function ProfileRankingTable({
               </Table.Td>
               <Table.Td ta="right">
                 {name.matches > 0 ? (
-                  <Badge variant="filled" color={name.eloScore >= 1000 ? 'teal' : 'red'} radius="xl" size="sm">
+                  <Badge variant="filled" color={name.eloScore >= 0 ? 'teal' : 'red'} radius="xl" size="sm">
                     {name.eloScore}
                   </Badge>
                 ) : (
