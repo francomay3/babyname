@@ -55,7 +55,6 @@ export function UserProfilePage({
   const canDeleteVotes = isAdmin || isOwnProfile;
 
   const userInfo = allUsers.find((u) => u.uid === userId);
-  const userNamesCount = allNames.filter((n) => n.addedBy === userId).length;
   const [optimisticMatches, removeOptimisticMatch] = useOptimistic(
     matches,
     (current, deletedId: string) => current.filter((m) => m.id !== deletedId)
@@ -115,7 +114,7 @@ export function UserProfilePage({
         <div>
           <Text fw={700} fz="lg">{userInfo?.displayName ?? userId}</Text>
           <Text fz="xs" c="dimmed">
-            {t.adminNamesCount(userNamesCount)} · {t.adminVotesCount(totalDuels)}
+            {t.adminVotesCount(totalDuels)}
           </Text>
         </div>
       </Group>

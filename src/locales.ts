@@ -211,7 +211,7 @@ export const locales: Record<Locale, Strings> = {
     voteNotEnoughLink: 'Agregá más nombres en la pestaña "Nombres" →',
     voteAllDoneTitle: '¡Votaste todos los duelos posibles!',
     voteAllDoneSubtitle: 'Cuando se agreguen nuevos nombres van a aparecer nuevos duelos.',
-    voteAllDoneLink: 'Ir a agregar nombres →',
+    voteAllDoneLink: 'Ir al ranking →',
     voteErrorTitle: 'Error al votar',
     voteErrorMsg: 'No se pudo guardar el voto. El duelo volvió a la lista.',
 
