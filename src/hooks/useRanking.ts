@@ -64,13 +64,11 @@ export function useRanking(gender: Gender) {
             matches: myScore?.matches ?? 0,
           };
         } else {
-          // Combined ranking: average of all users' scores
+          // Combined ranking: sum of all users' scores
           const voters = nameScores.filter((s) => s.matches > 0);
-          const avgElo =
+          const totalElo =
             voters.length > 0
-              ? Math.round(
-                  voters.reduce((sum, s) => sum + s.eloScore, 0) / voters.length
-                )
+              ? voters.reduce((sum, s) => sum + s.eloScore, 0)
               : 1000;
 
           const allScoresDetail = (allUsers as UserInfo[])
@@ -88,7 +86,7 @@ export function useRanking(gender: Gender) {
 
           return {
             ...name,
-            eloScore: avgElo,
+            eloScore: totalElo,
             wins: nameScores.reduce((sum, s) => sum + s.wins, 0),
             losses: nameScores.reduce((sum, s) => sum + s.losses, 0),
             matches: nameScores.reduce((sum, s) => sum + s.matches, 0),
