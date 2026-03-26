@@ -69,7 +69,7 @@ export function useRanking(gender: Gender) {
           const totalElo =
             voters.length > 0
               ? voters.reduce((sum, s) => sum + s.eloScore, 0)
-              : 1000;
+              : 0;
 
           const allScoresDetail = (allUsers as UserInfo[])
             .map((u) => {
